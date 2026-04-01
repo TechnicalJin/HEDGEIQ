@@ -3,1172 +3,1216 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HedgeIQ — Pro Betting Tracker</title>
+<title>HedgeIQ Pro</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c10;--surface:#111318;--surface2:#181b22;--border:#252830;
+  --accent:#00e5a0;--text:#e8eaf0;--muted:#666e82;
+  --green:#00e5a0;--yellow:#ffc94a;--red:#ff5e5b;--blue:#4ea8ff;--orange:#ff8c42;
+}
+body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,160,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.container{max-width:1000px;margin:0 auto;padding:24px 16px;position:relative;z-index:1}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;letter-spacing:-1px}
+.logo .iq{color:var(--accent)}
+.logo .pro{font-size:10px;color:var(--muted);font-weight:400;letter-spacing:3px;vertical-align:middle;margin-left:6px}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--accent);background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);padding:5px 12px;border-radius:20px}
+.live-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 1.5s infinite}
+.locked-live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--yellow);background:rgba(255,201,74,0.08);border:1px solid rgba(255,201,74,0.3);padding:5px 12px;border-radius:20px}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title .ic{color:var(--accent)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+input,select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:14px;padding:10px 12px;border-radius:8px;outline:none;transition:border-color .2s;width:100%}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,160,0.08)}
+input:disabled,select:disabled{opacity:0.45;cursor:not-allowed}
+select option{background:var(--surface2)}
+.btn{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1px;padding:10px 18px;border:none;border-radius:8px;cursor:pointer;transition:all .15s;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px}
+.btn-green{background:var(--green);color:#000}.btn-green:hover{background:#00ffb3;transform:translateY(-1px)}
+.btn-blue{background:var(--blue);color:#000}.btn-blue:hover{background:#7ec3ff;transform:translateY(-1px)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-full{width:100%;justify-content:center}
+.btn-sm{padding:7px 12px;font-size:10px}
+.btn:disabled{opacity:0.38;cursor:not-allowed;transform:none !important}
+.sig{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.sig-hedge  {background:rgba(0,229,160,0.12);color:var(--green);border:1px solid rgba(0,229,160,0.35)}
+.sig-early  {background:rgba(78,168,255,0.12);color:var(--blue);border:1px solid rgba(78,168,255,0.35)}
+.sig-soon   {background:rgba(255,140,66,0.12);color:var(--orange);border:1px solid rgba(255,140,66,0.35)}
+.sig-wait   {background:rgba(255,201,74,0.12);color:var(--yellow);border:1px solid rgba(255,201,74,0.35)}
+.sig-safe   {background:rgba(255,201,74,0.08);color:var(--yellow);border:1px dashed rgba(255,201,74,0.4)}
+.sig-damage {background:rgba(255,94,91,0.12);color:var(--red);border:1px solid rgba(255,94,91,0.35)}
+.sig-exit   {background:rgba(255,94,91,0.08);color:var(--red);border:1px dashed rgba(255,94,91,0.4)}
+.sig-none   {background:rgba(102,110,130,0.10);color:var(--muted);border:1px solid rgba(102,110,130,0.2)}
+.sig-locked {background:rgba(255,201,74,0.15);color:var(--yellow);border:1px solid rgba(255,201,74,0.5)}
+.m{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px}
+.m-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.m-val{font-family:'Syne',sans-serif;font-weight:800;font-size:22px}
+.m-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.pr{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.pr:last-child{border-bottom:none}
+.pr-lbl{font-size:12px;color:var(--muted)}
+.pr-val{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--muted)}
+.bar-wrap{margin:7px 0}
+.bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px}
+.bar-bg{background:var(--border);border-radius:3px;height:5px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s ease,background .4s}
+.bg{background:var(--green)}.by{background:var(--yellow)}.br{background:var(--red)}.bb{background:var(--blue)}.bo{background:var(--orange)}
+.ring-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ring-box{position:relative;width:96px;height:96px;flex-shrink:0}
+.ring-svg{width:96px;height:96px;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--surface2);stroke-width:9}
+.ring-fill{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .7s ease,stroke .4s}
+.ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.ring-num{font-family:'Syne',sans-serif;font-weight:800;font-size:22px}
+.ring-sub{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.tabs{display:flex;gap:2px;margin-bottom:16px;background:var(--surface2);padding:4px;border-radius:10px;flex-wrap:wrap}
+.tab{flex:1;min-width:70px;padding:8px 4px;text-align:center;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:7px;color:var(--muted);transition:all .2s;font-family:'Space Mono',monospace;border:none;background:transparent}
+.tab.active{background:var(--accent);color:#000;font-weight:700}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;font-size:9px;letter-spacing:1.5px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border);text-transform:uppercase}
+.tbl td{padding:9px 10px;border-bottom:1px solid rgba(37,40,48,0.5);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,0.015)}
+.cup{color:var(--red)}.cdn{color:var(--green)}.cne{color:var(--muted)}
+.pbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.pbox{background:var(--surface2);border-radius:10px;padding:16px;text-align:center}
+.pbox-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.pbox-val{font-family:'Syne',sans-serif;font-weight:800;font-size:24px}
+.pbox-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.warn-banner{background:rgba(255,94,91,0.06);border:1px dashed rgba(255,94,91,0.35);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--red);margin-bottom:12px}
+.apply-panel{background:rgba(0,229,160,0.04);border:1px solid rgba(0,229,160,0.25);border-radius:12px;padding:18px;margin-top:14px}
+.apply-title{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--green);margin-bottom:12px}
+.rec-panel{background:linear-gradient(135deg,rgba(0,229,160,0.04),rgba(78,168,255,0.03));border:1px solid rgba(0,229,160,0.18);border-radius:12px;padding:18px;margin-top:14px}
+.rec-title{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:var(--accent);margin-bottom:12px}
+.rec-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:11px;border-bottom:1px solid rgba(37,40,48,0.6)}
+.rec-row:last-child{border-bottom:none}
+.rec-key{color:var(--muted)}
+.rec-val{font-family:'Syne',sans-serif;font-weight:700}
+.dec-panel{background:var(--surface2);border-radius:10px;padding:14px;margin-top:12px}
+.dec-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:11px;border-bottom:1px solid rgba(37,40,48,0.7)}
+.dec-row:last-child{border-bottom:none}
+.dec-cond{color:var(--muted)}
+.tl-item{display:flex;align-items:flex-start;gap:10px;padding:7px 0;position:relative}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;border:2px solid}
+.tl-active{background:var(--accent);border-color:var(--accent);box-shadow:0 0 6px rgba(0,229,160,0.5)}
+.tl-done{background:var(--surface2);border-color:var(--muted)}
+.tl-warn{background:var(--red);border-color:var(--red)}
+.tl-lbl{font-size:11px;font-weight:700}
+.tl-desc{font-size:10px;color:var(--muted);margin-top:2px}
+.tl-line{position:absolute;left:4px;top:18px;width:2px;height:calc(100% - 6px);background:var(--border)}
+.chart-wrap{position:relative;height:230px;margin-top:8px}
+.row{display:flex;gap:12px;align-items:flex-end}
+.row .field{flex:1}
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:12px}
+.locked-badge{background:rgba(255,201,74,0.1);border:1px solid rgba(255,201,74,0.4);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--yellow);text-align:center;margin-top:10px}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ─── HEDGE LOCK OVERLAY ─── */
+.lock-overlay{
+  background:linear-gradient(135deg,rgba(255,201,74,0.06),rgba(255,201,74,0.03));
+  border:2px solid rgba(255,201,74,0.5);
+  border-radius:14px;
+  padding:20px;
+  margin-bottom:14px;
+  position:relative;
+}
+.lock-overlay::before{
+  content:'🔒 HEDGE LOCKED';
+  position:absolute;
+  top:-1px;left:16px;
+  transform:translateY(-50%);
+  background:var(--surface);
+  padding:2px 10px;
+  font-size:9px;
+  letter-spacing:2px;
+  color:var(--yellow);
+  font-weight:700;
+  border:1px solid rgba(255,201,74,0.4);
+  border-radius:6px;
+}
+.lock-frozen-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid rgba(37,40,48,0.7);
+  font-size:12px;
+}
+.lock-frozen-row:last-child{border-bottom:none}
+.lock-frozen-lbl{color:var(--muted)}
+.lock-frozen-val{font-family:'Syne',sans-serif;font-weight:700}
+.frozen-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,201,74,0.1);
+  border:1px solid rgba(255,201,74,0.35);
+  border-radius:6px;
+  padding:2px 8px;
+  font-size:9px;
+  letter-spacing:1px;
+  color:var(--yellow);
+  text-transform:uppercase;
+  font-weight:700;
+}
 
-  :root {
-    --bg: #0a0c10;
-    --surface: #111318;
-    --surface2: #181b22;
-    --border: #252830;
-    --accent: #00e5a0;
-    --accent2: #ff5e5b;
-    --accent3: #ffc94a;
-    --text: #e8eaf0;
-    --muted: #666e82;
-    --hedge-green: #00e5a0;
-    --wait-yellow: #ffc94a;
-    --exit-red: #ff5e5b;
-    --blue: #4ea8ff;
-  }
+/* Live odds update card — disabled when locked */
+.card-disabled-overlay{
+  position:relative;
+}
+.card-disabled-overlay::after{
+  content:'🔒 LOCKED — Hedge confirmed. Live updates paused.';
+  position:absolute;
+  inset:0;
+  background:rgba(10,12,16,0.82);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  color:var(--yellow);
+  letter-spacing:1px;
+  backdrop-filter:blur(2px);
+  z-index:10;
+  text-align:center;
+  padding:16px;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container { max-width: 980px; margin: 0 auto; padding: 24px 16px; position: relative; z-index: 1; }
-
-  /* ── HEADER ── */
-  .header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
-    flex-wrap: wrap; gap: 10px;
-  }
-  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
-  .logo span { color: var(--accent); }
-  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .live-badge {
-    display: flex; align-items: center; gap: 6px; font-size: 11px;
-    color: var(--accent); background: rgba(0,229,160,0.08);
-    border: 1px solid rgba(0,229,160,0.2); padding: 5px 10px; border-radius: 20px;
-  }
-  .live-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
-
-  /* ── CARDS ── */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-  .card-title {
-    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
-    letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
-    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
-  }
-  .card-title .icon { color: var(--accent); font-size: 16px; }
-
-  /* ── GRIDS ── */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
-
-  /* ── INPUTS ── */
-  .field { display: flex; flex-direction: column; gap: 6px; }
-  label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
-  input, select {
-    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-    font-family: 'Space Mono', monospace; font-size: 14px; padding: 10px 12px;
-    border-radius: 8px; outline: none; transition: border-color 0.2s; width: 100%;
-  }
-  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,160,0.08); }
-  select option { background: var(--surface2); }
-
-  /* ── BUTTONS ── */
-  .btn {
-    font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700;
-    letter-spacing: 1px; padding: 11px 20px; border: none; border-radius: 8px;
-    cursor: pointer; transition: all 0.15s; text-transform: uppercase;
-  }
-  .btn-primary { background: var(--accent); color: #000; }
-  .btn-primary:hover { background: #00ffb3; transform: translateY(-1px); }
-  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-blue { background: var(--blue); color: #000; }
-  .btn-blue:hover { background: #7ec3ff; transform: translateY(-1px); }
-  .btn-full { width: 100%; }
-  .btn-sm { padding: 8px 14px; font-size: 11px; }
-
-  /* ── SIGNAL BADGE ── */
-  .signal {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px; border-radius: 20px; font-size: 12px;
-    font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-  }
-  .signal-hedge  { background: rgba(0,229,160,0.12); color: var(--hedge-green); border: 1px solid rgba(0,229,160,0.3); }
-  .signal-early  { background: rgba(78,168,255,0.12); color: var(--blue);        border: 1px solid rgba(78,168,255,0.3); }
-  .signal-wait   { background: rgba(255,201,74,0.12); color: var(--wait-yellow); border: 1px solid rgba(255,201,74,0.3); }
-  .signal-exit   { background: rgba(255,94,91,0.12);  color: var(--exit-red);    border: 1px solid rgba(255,94,91,0.3); }
-  .signal-none   { background: rgba(102,110,130,0.12);color: var(--muted);       border: 1px solid rgba(102,110,130,0.2); }
-  .signal-missed { background: rgba(255,94,91,0.08);  color: var(--exit-red);    border: 1px dashed rgba(255,94,91,0.4); }
-
-  /* ── METRIC CARDS ── */
-  .metric { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
-  .metric-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-  .metric-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; }
-  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
-
-  /* ── PROFIT ROWS ── */
-  .profit-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .profit-row:last-child { border-bottom: none; }
-  .profit-label { font-size: 13px; color: var(--muted); }
-  .profit-amount { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
-  .profit-pos { color: var(--hedge-green); }
-  .profit-neg { color: var(--exit-red); }
-
-  /* ── TREND BARS ── */
-  .trend-bar-wrap { margin: 8px 0; }
-  .trend-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-  .trend-bar-bg { background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
-  .trend-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-  .bar-green  { background: var(--accent); }
-  .bar-yellow { background: var(--wait-yellow); }
-  .bar-red    { background: var(--exit-red); }
-  .bar-blue   { background: var(--blue); }
-
-  /* ── SCORE RING ── */
-  .score-wrap { display: flex; align-items: center; gap: 20px; margin: 12px 0; flex-wrap: wrap; }
-  .score-ring-container { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
-  .score-ring-svg { width: 90px; height: 90px; transform: rotate(-90deg); }
-  .score-ring-bg { fill: none; stroke: var(--surface2); stroke-width: 8; }
-  .score-ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease, stroke 0.4s; }
-  .score-center {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    text-align: center;
-  }
-  .score-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; }
-  .score-label-small { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-  .score-factors { flex: 1; min-width: 180px; }
-  .score-factor-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px; }
-  .score-factor-name { color: var(--muted); }
-  .score-factor-val  { font-weight: 700; }
-
-  /* ── RISK METER ── */
-  .risk-meter { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .risk-bar-track { flex: 1; min-width: 120px; height: 8px; border-radius: 4px; background: var(--surface2); overflow: hidden; position: relative; }
-  .risk-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease, background 0.4s; }
-  .risk-label-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; }
-
-  /* ── DECISION ENGINE ── */
-  .decision-panel { background: var(--surface2); border-radius: 10px; padding: 16px; margin-top: 12px; }
-  .decision-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 12px; border-bottom: 1px solid rgba(37,40,48,0.8); }
-  .decision-row:last-child { border-bottom: none; }
-  .decision-cond { color: var(--muted); }
-
-  /* ── TABS ── */
-  .tabs { display: flex; gap: 2px; margin-bottom: 16px; background: var(--surface2); padding: 4px; border-radius: 10px; flex-wrap: wrap; }
-  .tab {
-    flex: 1; min-width: 80px; padding: 8px; text-align: center; font-size: 11px;
-    letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 7px;
-    color: var(--muted); transition: all 0.2s; font-family: 'Space Mono', monospace;
-    border: none; background: transparent;
-  }
-  .tab.active { background: var(--accent); color: #000; font-weight: 700; }
-
-  /* ── TABLE ── */
-  .odds-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .odds-table th { text-align: left; font-size: 10px; letter-spacing: 1.5px; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
-  .odds-table td { padding: 10px 10px; border-bottom: 1px solid rgba(37,40,48,0.5); vertical-align: middle; }
-  .odds-table tr:last-child td { border-bottom: none; }
-  .odds-table tr:hover td { background: rgba(255,255,255,0.02); }
-  .change-up { color: var(--exit-red); }
-  .change-down { color: var(--hedge-green); }
-  .change-neutral { color: var(--muted); }
-
-  /* ── APPLY HEDGE PANEL ── */
-  .apply-hedge-panel {
-    background: linear-gradient(135deg, rgba(0,229,160,0.06), rgba(0,229,160,0.02));
-    border: 1px solid rgba(0,229,160,0.25); border-radius: 12px; padding: 18px;
-    margin-top: 14px;
-  }
-  .apply-hedge-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--accent); margin-bottom: 12px; }
-
-  /* ── PROFIT SUMMARY BOX ── */
-  .profit-summary {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
-  }
-  .profit-box { background: var(--surface2); border-radius: 10px; padding: 14px; text-align: center; }
-  .profit-box-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-  .profit-box-amount { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; }
-  .profit-box-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
-
-  /* ── MISSED HEDGE ── */
-  .missed-hedge-banner {
-    background: rgba(255,94,91,0.06); border: 1px dashed rgba(255,94,91,0.35);
-    border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 10px;
-    font-size: 12px; color: var(--exit-red); margin-top: 10px;
-  }
-
-  /* ── CHART ── */
-  .chart-wrap { position: relative; height: 220px; margin-top: 8px; }
-
-  /* ── MISC ── */
-  .row { display: flex; gap: 12px; align-items: flex-end; }
-  .row .field { flex: 1; }
-  .empty { text-align: center; padding: 28px; color: var(--muted); font-size: 12px; }
-  .sep { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  @media (max-width: 600px) {
-    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-    .row { flex-direction: column; }
-    .profit-summary { grid-template-columns: 1fr; }
-    .score-wrap { flex-direction: column; align-items: flex-start; }
-  }
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+@media(max-width:640px){
+  .g2,.g3{grid-template-columns:1fr}
+  .row{flex-direction:column}
+  .pbox-grid{grid-template-columns:1fr}
+  .ring-wrap{flex-direction:column;align-items:flex-start}
+}
 </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- ═══ HEADER ═══ -->
-  <div class="header">
-    <div class="logo">HEDGE<span>IQ</span> <span style="font-size:11px;color:var(--muted);font-weight:400;letter-spacing:2px">PRO</span></div>
-    <div class="header-right">
-      <div class="live-badge"><div class="live-dot"></div>LIVE TRACKER</div>
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">HEDGE<span class="iq">IQ</span><span class="pro">PRO</span></div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <div id="headerBadge" class="live-badge"><div class="live-dot"></div>LIVE TRACKER</div>
+  </div>
+</div>
+
+<!-- MATCH SETUP -->
+<div class="card">
+  <div class="card-title"><span class="ic">⚙</span> Match Setup</div>
+  <div class="g2" style="margin-bottom:12px">
+    <div class="field"><label>Team A</label><input id="teamA" type="text" placeholder="e.g. Mumbai Indians"></div>
+    <div class="field"><label>Team B</label><input id="teamB" type="text" placeholder="e.g. Chennai Super Kings"></div>
+  </div>
+  <div class="g2">
+    <div class="field"><label>Team A — Initial Odds</label><input id="initOddsA" type="number" step="0.01" placeholder="1.50" min="1.01"></div>
+    <div class="field"><label>Team B — Initial Odds</label><input id="initOddsB" type="number" step="0.01" placeholder="2.50" min="1.01"></div>
+  </div>
+</div>
+
+<!-- BET SETUP -->
+<div class="card">
+  <div class="card-title"><span class="ic">₹</span> Bet Setup</div>
+  <div class="g3">
+    <div class="field">
+      <label>Bet On</label>
+      <select id="betTeam">
+        <option value="">Select team...</option>
+        <option value="A">Team A</option>
+        <option value="B">Team B</option>
+      </select>
+    </div>
+    <div class="field"><label>Bet Amount (₹)</label><input id="betAmt" type="number" placeholder="1000" min="1"></div>
+    <div class="field" style="justify-content:flex-end">
+      <button class="btn btn-green btn-full" onclick="initMatch()">▶ START TRACKING</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN SYSTEM -->
+<div id="mainSystem" style="display:none">
+
+  <!-- MATCH BANNER -->
+  <div class="card" style="background:linear-gradient(135deg,#111318,#0d1019)">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Active Match</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px" id="matchTitle">—</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Bet Placed</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:var(--accent)" id="betSummary">—</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Entry Odds</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:var(--accent)" id="entryOddsDisplay">—</div>
+      </div>
     </div>
   </div>
 
-  <!-- ═══ MATCH SETUP ═══ -->
-  <div class="card" id="setupCard">
-    <div class="card-title"><span class="icon">⚙</span> Match Setup</div>
-    <div class="grid-2" style="margin-bottom:12px">
-      <div class="field"><label>Team A</label><input type="text" id="teamA" placeholder="e.g. Mumbai Indians"></div>
-      <div class="field"><label>Team B</label><input type="text" id="teamB" placeholder="e.g. Chennai Super Kings"></div>
-    </div>
-    <div class="grid-2">
-      <div class="field"><label>Team A — Initial Odds</label><input type="number" id="initOddsA" step="0.01" placeholder="e.g. 1.50" min="1.01"></div>
-      <div class="field"><label>Team B — Initial Odds</label><input type="number" id="initOddsB" step="0.01" placeholder="e.g. 2.50" min="1.01"></div>
-    </div>
-  </div>
-
-  <!-- ═══ BET SETUP ═══ -->
-  <div class="card">
-    <div class="card-title"><span class="icon">₹</span> Bet Setup</div>
-    <div class="grid-3">
-      <div class="field">
-        <label>Bet On</label>
-        <select id="betTeam">
-          <option value="">Select team...</option>
-          <option value="A">Team A</option>
-          <option value="B">Team B</option>
-        </select>
+  <!-- LIVE SIGNAL BAR -->
+  <div class="card" style="padding:14px 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase">Live Signal</div>
+        <div id="sigTop" class="sig sig-none">⚪ AWAITING DATA</div>
+        <div id="missedBadge" style="display:none" class="sig sig-damage">⚠ MISSED BEST POINT</div>
       </div>
-      <div class="field"><label>Bet Amount (₹)</label><input type="number" id="betAmt" placeholder="e.g. 1000" min="1"></div>
-      <div class="field" style="justify-content:flex-end">
-        <button class="btn btn-primary btn-full" onclick="initMatch()">▶ START TRACKING</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="applyBtn" class="btn btn-blue btn-sm" style="display:none" onclick="triggerApply()">⚡ APPLY HEDGE</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetMatch()">↺ RESET</button>
       </div>
     </div>
   </div>
 
-  <!-- ═══ MAIN SYSTEM ═══ -->
-  <div id="mainSystem" style="display:none">
-
-    <!-- Match Banner -->
-    <div class="card" style="background:linear-gradient(135deg,#111318,#0d1019)">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-        <div>
-          <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Active Match</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px" id="matchTitle">—</div>
+  <!-- LOCKED HEDGE SUMMARY (shown after confirm) -->
+  <div id="lockedSummaryCard" style="display:none">
+    <div class="lock-overlay">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--yellow)">⚡ Hedge Executed &amp; Locked</div>
+        <div class="frozen-badge">🔒 FROZEN</div>
+      </div>
+      <div class="g2" style="margin-bottom:14px">
+        <div class="pbox" style="background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.2)">
+          <div class="pbox-lbl" id="ls-lbl1">If Team A wins</div>
+          <div class="pbox-val pos" id="ls-val1">—</div>
+          <div class="pbox-sub">Locked profit</div>
         </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Bet Placed</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--accent)" id="betSummary">—</div>
+        <div class="pbox" style="background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.2)">
+          <div class="pbox-lbl" id="ls-lbl2">If Team B wins</div>
+          <div class="pbox-val pos" id="ls-val2">—</div>
+          <div class="pbox-sub">Locked profit</div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Entry Odds</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--accent)" id="entryOddsDisplay">—</div>
-        </div>
+      </div>
+      <div class="lock-frozen-row"><span class="lock-frozen-lbl">Hedge placed on</span><span class="lock-frozen-val" id="ls-team" style="color:var(--blue)">—</span></div>
+      <div class="lock-frozen-row"><span class="lock-frozen-lbl">Hedge amount</span><span class="lock-frozen-val" id="ls-hedgeAmt" style="color:var(--yellow)">—</span></div>
+      <div class="lock-frozen-row"><span class="lock-frozen-lbl">Hedge odds (locked)</span><span class="lock-frozen-val" id="ls-hedgeOdds">— <span class="frozen-badge" style="margin-left:6px">🔒</span></span></div>
+      <div class="lock-frozen-row"><span class="lock-frozen-lbl">Total invested</span><span class="lock-frozen-val" id="ls-totalInvest">—</span></div>
+      <div class="lock-frozen-row"><span class="lock-frozen-lbl">Guaranteed profit</span><span class="lock-frozen-val pos" id="ls-guar" style="font-size:18px">—</span></div>
+      <div style="margin-top:12px;font-size:11px;color:var(--muted);background:var(--surface2);padding:10px 14px;border-radius:8px" id="ls-formula">—</div>
+      <div style="margin-top:10px;font-size:10px;color:rgba(255,201,74,0.7);letter-spacing:0.5px">
+        ⚠ Live odds updates are now disabled. All values above are frozen at hedge execution time.
       </div>
     </div>
+  </div>
 
-    <!-- LIVE SIGNAL BAR (always visible) -->
-    <div class="card" id="signalBar" style="padding:14px 20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <div style="font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase">Live Signal</div>
-          <div id="signalBadgeTop" class="signal signal-none">⚪ AWAITING DATA</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <div id="missedHedgeBadge" style="display:none" class="signal signal-missed">⚠ MISSED BEST POINT</div>
-          <button id="applyHedgeBtnTop" class="btn btn-blue btn-sm" style="display:none" onclick="applyHedgeAction()">⚡ APPLY HEDGE</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- PROFIT SUMMARY (always visible after update) -->
-    <div id="profitSummaryCard" style="display:none" class="card">
-      <div class="card-title"><span class="icon">💰</span> Profit Output</div>
-      <div class="profit-summary">
-        <div class="profit-box">
-          <div class="profit-box-label" id="ps-labelA">If Team A wins</div>
-          <div class="profit-box-amount profit-pos" id="ps-profitA">—</div>
-          <div class="profit-box-sub" id="ps-subA">—</div>
-        </div>
-        <div class="profit-box">
-          <div class="profit-box-label" id="ps-labelB">If Team B wins</div>
-          <div class="profit-box-amount profit-pos" id="ps-profitB">—</div>
-          <div class="profit-box-sub" id="ps-subB">—</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <div class="metric" style="flex:1">
-          <div class="metric-label">Total Invested</div>
-          <div class="metric-value" id="ps-totalInvest" style="font-size:18px">—</div>
-        </div>
-        <div class="metric" style="flex:1">
-          <div class="metric-label">Guaranteed Profit</div>
-          <div class="metric-value profit-pos" id="ps-guaranteed" style="font-size:18px">—</div>
-        </div>
-        <div class="metric" style="flex:1">
-          <div class="metric-label">Hedge Amount</div>
-          <div class="metric-value" id="ps-hedgeAmt" style="font-size:18px;color:var(--wait-yellow)">—</div>
-        </div>
-      </div>
-      <div id="ps-formula" style="margin-top:10px;font-size:11px;color:var(--muted);background:var(--surface2);padding:10px 14px;border-radius:8px"></div>
-    </div>
-
-    <!-- ADD ODDS UPDATE -->
-    <div class="card">
-      <div class="card-title"><span class="icon">📡</span> Add Odds Update</div>
+  <!-- ADD ODDS UPDATE — locked when hedge confirmed -->
+  <div id="updateCardWrapper">
+    <div class="card" id="updateCard">
+      <div class="card-title"><span class="ic">📡</span> Add Odds Update</div>
       <div class="row">
-        <div class="field"><label>Label / Over</label><input type="text" id="updateLabel" placeholder="e.g. Over 5"></div>
-        <div class="field"><label id="oddsALabel">Team A Odds</label><input type="number" id="newOddsA" step="0.01" placeholder="1.80" min="1.01"></div>
-        <div class="field"><label id="oddsBLabel">Team B Odds</label><input type="number" id="newOddsB" step="0.01" placeholder="2.10" min="1.01"></div>
+        <div class="field"><label>Label / Over</label><input id="updateLabel" type="text" placeholder="e.g. Over 5"></div>
+        <div class="field"><label id="oddsALabel">Team A Odds</label><input id="newOddsA" type="number" step="0.01" placeholder="1.80" min="1.01"></div>
+        <div class="field"><label id="oddsBLabel">Team B Odds</label><input id="newOddsB" type="number" step="0.01" placeholder="2.10" min="1.01"></div>
         <div class="field" style="justify-content:flex-end">
-          <button class="btn btn-primary" onclick="addOddsUpdate()">+ ADD</button>
+          <button id="addUpdateBtn" class="btn btn-green" onclick="addUpdate()">+ ADD</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- TABS -->
-    <div class="card" style="padding-bottom:0">
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('analysis')">📊 Analysis</button>
-        <button class="tab" onclick="switchTab('score')">🎯 Score</button>
-        <button class="tab" onclick="switchTab('chart')">📈 Chart</button>
-        <button class="tab" onclick="switchTab('hedge')">🧮 Hedge</button>
-        <button class="tab" onclick="switchTab('history')">📋 History</button>
+  <!-- PROFIT OUTPUT CARD -->
+  <div id="profitCard" class="card" style="display:none">
+    <div class="card-title"><span class="ic">💰</span> Profit Output</div>
+    <div class="pbox-grid">
+      <div class="pbox">
+        <div class="pbox-lbl" id="pbox-Albl">If Team A wins</div>
+        <div class="pbox-val pos" id="pbox-Aval">—</div>
+        <div class="pbox-sub" id="pbox-Asub">—</div>
+      </div>
+      <div class="pbox">
+        <div class="pbox-lbl" id="pbox-Blbl">If Team B wins</div>
+        <div class="pbox-val pos" id="pbox-Bval">—</div>
+        <div class="pbox-sub" id="pbox-Bsub">—</div>
+      </div>
+    </div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="m"><div class="m-lbl">Hedge Amount</div><div class="m-val" id="po-hedge" style="color:var(--yellow)">—</div></div>
+      <div class="m"><div class="m-lbl">Total Invested</div><div class="m-val neu" id="po-invest" style="font-size:18px">—</div></div>
+      <div class="m"><div class="m-lbl">Guaranteed Profit</div><div class="m-val" id="po-guar" style="font-size:18px">—</div></div>
+    </div>
+    <div id="po-formula" style="font-size:11px;color:var(--muted);background:var(--surface2);padding:10px 14px;border-radius:8px;margin-bottom:0"></div>
+    <!-- Missed profit block -->
+    <div id="missedBlock" style="display:none;margin-top:12px;background:rgba(255,94,91,0.05);border:1px dashed rgba(255,94,91,0.3);border-radius:10px;padding:14px">
+      <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:10px">⚠ Missed Profit Analysis</div>
+      <div class="g3">
+        <div><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Best Possible ⭐</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--green)" id="mp-best">—</div></div>
+        <div><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Your Current</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--yellow)" id="mp-curr">—</div></div>
+        <div><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Missed ❌</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--red)" id="mp-diff">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="card" style="padding-bottom:0">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('analysis')">📊 Analysis</button>
+      <button class="tab" onclick="switchTab('score')">🎯 Score</button>
+      <button class="tab" onclick="switchTab('chart')">📈 Chart</button>
+      <button class="tab" onclick="switchTab('hedge')">🧮 Hedge</button>
+      <button class="tab" onclick="switchTab('history')">📋 History</button>
+    </div>
+
+    <!-- ANALYSIS TAB -->
+    <div id="tab-analysis">
+      <div class="g2" style="margin-bottom:14px">
+        <div class="m"><div class="m-lbl">Current — Bet Team</div><div class="m-val" id="an-curBet" style="color:var(--accent)">—</div><div class="m-sub" id="an-betChg">No updates yet</div></div>
+        <div class="m"><div class="m-lbl">Current — Other Team</div><div class="m-val" id="an-curOther">—</div><div class="m-sub" id="an-otherChg">—</div></div>
+      </div>
+      <div class="m" style="margin-bottom:14px">
+        <div class="m-lbl" style="margin-bottom:8px">Risk Level</div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:17px;min-width:84px" id="riskLbl">—</div>
+          <div style="flex:1;min-width:100px;height:8px;border-radius:4px;background:var(--border);overflow:hidden"><div id="riskBar" style="height:100%;border-radius:4px;transition:width .5s,background .4s;width:0%"></div></div>
+          <div style="font-size:11px;color:var(--muted)" id="riskDesc">—</div>
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div class="m-lbl" style="margin-bottom:10px">Odds Movement</div>
+        <div class="bar-wrap"><div class="bar-lbl"><span>Total Drop %</span><span id="an-drop">0%</span></div><div class="bar-bg"><div class="bar-fill bg" id="an-dropBar" style="width:0%"></div></div></div>
+        <div class="bar-wrap"><div class="bar-lbl"><span>Trend Confirmations</span><span id="an-confs">0/3</span></div><div class="bar-bg"><div class="bar-fill by" id="an-confsBar" style="width:0%"></div></div></div>
+        <div class="bar-wrap"><div class="bar-lbl"><span>Volatility</span><span id="an-vol">—</span></div><div class="bar-bg"><div class="bar-fill br" id="an-volBar" style="width:0%"></div></div></div>
+        <div class="bar-wrap"><div class="bar-lbl"><span>Remaining Potential</span><span id="an-remPot">—</span></div><div class="bar-bg"><div class="bar-fill bb" id="an-remPotBar" style="width:0%"></div></div></div>
+      </div>
+      <div class="dec-panel">
+        <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Decision Engine</div>
+        <div class="dec-row"><span class="dec-cond">Odds drop ≥ 20%</span><span id="d-drop20">—</span></div>
+        <div class="dec-row"><span class="dec-cond">Score-based signal</span><span id="d-score">—</span></div>
+        <div class="dec-row"><span class="dec-cond">≥ 2 confirmations</span><span id="d-confs2">—</span></div>
+        <div class="dec-row"><span class="dec-cond">Trend reversal (last 2 rising)</span><span id="d-rev">—</span></div>
+        <div class="dec-row"><span class="dec-cond">Volatility filter</span><span id="d-volFil">—</span></div>
+        <div class="dec-row"><span class="dec-cond">Profit state</span><span id="d-profState">—</span></div>
+        <div class="dec-row"><span class="dec-cond">Best hedge point status</span><span id="d-best">—</span></div>
+      </div>
+      <div style="padding-bottom:20px"></div>
+    </div>
+
+    <!-- SCORE TAB -->
+    <div id="tab-score" style="display:none">
+      <div class="ring-wrap" style="margin-bottom:18px">
+        <div class="ring-box">
+          <svg class="ring-svg" viewBox="0 0 96 96">
+            <circle class="ring-bg" cx="48" cy="48" r="40"/>
+            <circle class="ring-fill" id="ringFill" cx="48" cy="48" r="40" stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke="var(--accent)"/>
+          </svg>
+          <div class="ring-center"><div class="ring-num" id="ringNum">0</div><div class="ring-sub">/100</div></div>
+        </div>
+        <div style="flex:1;min-width:180px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:8px"><span style="color:var(--muted)">% Drop (40pts)</span><span style="font-weight:700;color:var(--green)" id="sf-drop">0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:8px"><span style="color:var(--muted)">Trend (30pts)</span><span style="font-weight:700;color:var(--yellow)" id="sf-trend">0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:8px"><span style="color:var(--muted)">Stability (20pts)</span><span style="font-weight:700;color:var(--blue)" id="sf-stab">0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--muted)">Confidence (10pts)</span><span style="font-weight:700;color:var(--muted)" id="sf-conf">0</span></div>
+        </div>
+      </div>
+      <div class="m" style="margin-bottom:14px">
+        <div class="m-lbl" style="margin-bottom:8px">Score Verdict</div>
+        <div id="scoreVerdict" class="sig sig-none" style="font-size:13px;padding:10px 18px;display:inline-flex">— Calculating...</div>
+        <div id="scoreDesc" style="margin-top:8px;font-size:11px;color:var(--muted)">Add more updates to improve accuracy.</div>
+      </div>
+      <div class="m-lbl" style="margin-bottom:8px">Score Breakdown</div>
+      <div class="bar-wrap"><div class="bar-lbl"><span>% Drop</span><span id="sb-drop">0</span></div><div class="bar-bg"><div class="bar-fill bg" id="sb-dropF" style="width:0%"></div></div></div>
+      <div class="bar-wrap"><div class="bar-lbl"><span>Trend</span><span id="sb-trend">0</span></div><div class="bar-bg"><div class="bar-fill by" id="sb-trendF" style="width:0%"></div></div></div>
+      <div class="bar-wrap"><div class="bar-lbl"><span>Stability</span><span id="sb-stab">0</span></div><div class="bar-bg"><div class="bar-fill bb" id="sb-stabF" style="width:0%"></div></div></div>
+      <div class="bar-wrap"><div class="bar-lbl"><span>Confidence</span><span id="sb-conf">0</span></div><div class="bar-bg"><div class="bar-fill bo" id="sb-confF" style="width:0%"></div></div></div>
+      <div style="padding-bottom:20px"></div>
+    </div>
+
+    <!-- CHART TAB -->
+    <div id="tab-chart" style="display:none">
+      <div class="card-title" style="margin-bottom:4px"><span class="ic">📈</span> Odds Movement Chart</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Both teams' odds plotted over time. Dashed line = hedge trigger threshold.</div>
+      <div class="chart-wrap"><canvas id="oddsChart"></canvas></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:10px">
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:3px;background:var(--green);border-radius:2px"></div>Bet Team</div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:3px;background:var(--yellow);border-radius:2px"></div>Other Team</div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:2px;background:rgba(0,229,160,0.4);border-radius:2px;border-top:2px dashed rgba(0,229,160,0.4)"></div>Hedge Zone</div>
+      </div>
+      <div style="padding-bottom:20px"></div>
+    </div>
+
+    <!-- HEDGE TAB -->
+    <div id="tab-hedge" style="display:none">
+      <div class="g2" style="margin-bottom:14px">
+        <div class="m"><div class="m-lbl">Your Bet</div><div class="m-val" id="hc-bet">₹0</div><div class="m-sub" id="hc-betTeam">—</div></div>
+        <div class="m"><div class="m-lbl">Entry Odds</div><div class="m-val" id="hc-entry" style="color:var(--accent)">—</div><div class="m-sub">At match start</div></div>
+      </div>
+      <div class="m" style="margin-bottom:14px">
+        <div class="m-lbl" style="margin-bottom:4px">Hedge Amount to Place</div>
+        <div class="m-val" id="hc-amt" style="color:var(--yellow);font-size:30px">₹—</div>
+        <div class="m-sub" id="hc-formula">—</div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div class="pr"><span class="pr-lbl" id="hc-lblA">If Team A wins</span><span class="pr-val pos" id="hc-pA">—</span></div>
+        <div class="pr"><span class="pr-lbl" id="hc-lblB">If Team B wins</span><span class="pr-val pos" id="hc-pB">—</span></div>
+        <div class="pr"><span class="pr-lbl">Total Invested</span><span class="pr-val neu" id="hc-invest">—</span></div>
+        <div class="pr"><span class="pr-lbl">Guaranteed Profit</span><span class="pr-val" id="hc-guar">—</span></div>
+        <div class="pr" style="border:none"><span class="pr-lbl">Profit State</span><span id="hc-state">—</span></div>
       </div>
 
-      <!-- ── TAB: ANALYSIS ── -->
-      <div id="tab-analysis">
-        <div class="grid-2" style="margin-bottom:16px">
-          <div class="metric">
-            <div class="metric-label">Current Odds — Bet Team</div>
-            <div class="metric-value" id="curOddsBet" style="color:var(--accent)">—</div>
-            <div class="metric-sub" id="curOddsChange">No updates yet</div>
-          </div>
-          <div class="metric">
-            <div class="metric-label">Current Odds — Other Team</div>
-            <div class="metric-value" id="curOddsOther">—</div>
-            <div class="metric-sub" id="curOddsOtherChange">No updates yet</div>
-          </div>
+      <!-- APPLY HEDGE PANEL -->
+      <div id="applyPanel" class="apply-panel" style="display:none">
+        <div class="apply-title">⚡ Apply Hedge — Execute Now</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px" id="applyDesc">—</div>
+        <div class="g2" style="margin-bottom:14px">
+          <div class="m"><div class="m-lbl">Place On</div><div class="m-val" id="ap-team" style="color:var(--blue);font-size:17px">—</div></div>
+          <div class="m"><div class="m-lbl">Amount</div><div class="m-val" id="ap-amt" style="color:var(--yellow);font-size:20px">₹—</div></div>
         </div>
-
-        <!-- Risk Meter -->
-        <div class="metric" style="margin-bottom:16px">
-          <div class="metric-label" style="margin-bottom:10px">Risk Level</div>
-          <div class="risk-meter">
-            <div class="risk-label-text" id="riskLabel" style="min-width:80px">—</div>
-            <div class="risk-bar-track">
-              <div class="risk-bar-fill" id="riskBar" style="width:0%"></div>
-            </div>
-            <div style="font-size:11px;color:var(--muted)" id="riskDesc">—</div>
-          </div>
+        <div style="background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.15);border-radius:8px;padding:14px;font-size:12px;margin-bottom:14px">
+          <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Locked Outcome After Hedge</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--muted)" id="ap-lbl1">—</span><span class="pos" id="ap-p1">—</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)" id="ap-lbl2">—</span><span class="pos" id="ap-p2">—</span></div>
         </div>
-
-        <!-- Bars -->
-        <div style="margin-bottom:16px">
-          <div class="metric-label" style="margin-bottom:10px">Odds Movement (Bet Team)</div>
-          <div class="trend-bar-wrap">
-            <div class="trend-bar-label"><span>Total Drop %</span><span id="dropPct">0%</span></div>
-            <div class="trend-bar-bg"><div class="trend-bar-fill bar-green" id="dropBar" style="width:0%"></div></div>
-          </div>
-          <div class="trend-bar-wrap" style="margin-top:8px">
-            <div class="trend-bar-label"><span>Trend Confirmations</span><span id="confirmCount">0 / 3</span></div>
-            <div class="trend-bar-bg"><div class="trend-bar-fill bar-yellow" id="confirmBar" style="width:0%"></div></div>
-          </div>
-          <div class="trend-bar-wrap" style="margin-top:8px">
-            <div class="trend-bar-label"><span>Volatility</span><span id="volatilityVal">—</span></div>
-            <div class="trend-bar-bg"><div class="trend-bar-fill bar-red" id="volatilityBar" style="width:0%"></div></div>
-          </div>
-        </div>
-
-        <!-- Decision Engine -->
-        <div class="decision-panel">
-          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Decision Engine</div>
-          <div class="decision-row"><span class="decision-cond">Odds drop ≥ 20% (full hedge)</span><span id="cond1">—</span></div>
-          <div class="decision-row"><span class="decision-cond">Odds drop ≥ 10% + rising (early hedge)</span><span id="cond-early">—</span></div>
-          <div class="decision-row"><span class="decision-cond">≥ 2 trend confirmations</span><span id="cond2">—</span></div>
-          <div class="decision-row"><span class="decision-cond">Odds consistently falling</span><span id="cond3">—</span></div>
-          <div class="decision-row"><span class="decision-cond">Odds rising (exit risk)</span><span id="cond4">—</span></div>
-          <div class="decision-row"><span class="decision-cond">Best hedge point detected</span><span id="condBest">—</span></div>
-        </div>
-        <div style="padding-bottom:20px"></div>
+        <button class="btn btn-green btn-full" id="confirmBtn" onclick="confirmHedge()">✔ CONFIRM &amp; LOCK HEDGE</button>
+        <div id="lockedMsg" style="display:none" class="locked-badge">🔒 Hedge Confirmed &amp; Locked — All values frozen. Profit guaranteed regardless of match result.</div>
       </div>
 
-      <!-- ── TAB: SCORE ── -->
-      <div id="tab-score" style="display:none">
-        <div style="margin-bottom:16px">
-          <div class="card-title" style="margin-bottom:12px"><span class="icon">🎯</span> Hedge Timing Score</div>
-          <div class="score-wrap">
-            <div class="score-ring-container">
-              <svg class="score-ring-svg" viewBox="0 0 90 90">
-                <circle class="score-ring-bg" cx="45" cy="45" r="36"/>
-                <circle class="score-ring-fill" id="scoreRingFill" cx="45" cy="45" r="36"
-                  stroke-dasharray="226.2" stroke-dashoffset="226.2" stroke="var(--accent)"/>
-              </svg>
-              <div class="score-center">
-                <div class="score-num" id="scoreNum" style="color:var(--accent)">0</div>
-                <div class="score-label-small">/100</div>
-              </div>
-            </div>
-            <div class="score-factors">
-              <div class="score-factor-row"><span class="score-factor-name">% Drop (40%)</span><span class="score-factor-val" id="sf-drop" style="color:var(--accent)">0</span></div>
-              <div class="score-factor-row"><span class="score-factor-name">Trend (30%)</span><span class="score-factor-val" id="sf-trend" style="color:var(--wait-yellow)">0</span></div>
-              <div class="score-factor-row"><span class="score-factor-name">Stability (20%)</span><span class="score-factor-val" id="sf-stab" style="color:var(--blue)">0</span></div>
-              <div class="score-factor-row"><span class="score-factor-name">Updates (10%)</span><span class="score-factor-val" id="sf-time" style="color:var(--muted)">0</span></div>
-            </div>
-          </div>
+      <!-- RECOMMENDATION ENGINE -->
+      <div class="rec-panel">
+        <div class="rec-title">🧠 Recommendation Engine</div>
+        <div class="rec-row"><span class="rec-key">Recommended Action</span><span class="rec-val" id="rec-action" style="color:var(--accent)">—</span></div>
+        <div class="rec-row"><span class="rec-key">Hedge Amount</span><span class="rec-val" id="rec-amt" style="color:var(--yellow)">—</span></div>
+        <div class="rec-row"><span class="rec-key">Expected Profit</span><span class="rec-val" id="rec-profit">—</span></div>
+        <div class="rec-row"><span class="rec-key">Timing Quality</span><span class="rec-val" id="rec-timing">—</span></div>
+        <div class="rec-row"><span class="rec-key">Risk Level</span><span class="rec-val" id="rec-risk">—</span></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <div style="font-size:10px;color:var(--muted);min-width:90px">Confidence</div>
+          <div style="flex:1;height:6px;border-radius:3px;background:var(--border);overflow:hidden"><div class="bar-fill bg" id="rec-confBar" style="width:0%"></div></div>
+          <div style="font-size:11px;font-family:'Syne',sans-serif;font-weight:700" id="rec-confPct">0%</div>
         </div>
-
-        <!-- Score verdict -->
-        <div class="metric" style="margin-bottom:16px">
-          <div class="metric-label" style="margin-bottom:6px">Score Verdict</div>
-          <div id="scoreVerdict" class="signal signal-none" style="font-size:14px;padding:10px 18px">— Calculating...</div>
-          <div id="scoreVerdictDesc" style="margin-top:8px;font-size:12px;color:var(--muted)">Add more updates to improve accuracy.</div>
-        </div>
-
-        <!-- Score breakdown bar -->
-        <div>
-          <div class="metric-label" style="margin-bottom:8px">Score Breakdown</div>
-          <div class="trend-bar-wrap">
-            <div class="trend-bar-label"><span>% Drop contribution</span><span id="sbar-drop">0</span></div>
-            <div class="trend-bar-bg"><div class="trend-bar-fill bar-green" id="sbar-dropFill" style="width:0%"></div></div>
-          </div>
-          <div class="trend-bar-wrap">
-            <div class="trend-bar-label"><span>Trend contribution</span><span id="sbar-trend">0</span></div>
-            <div class="trend-bar-bg"><div class="trend-bar-fill bar-yellow" id="sbar-trendFill" style="width:0%"></div></div>
-          </div>
-          <div class="trend-bar-wrap">
-            <div class="trend-bar-label"><span>Stability contribution</span><span id="sbar-stab">0</span></div>
-            <div class="trend-bar-bg"><div class="trend-bar-fill bar-blue" id="sbar-stabFill" style="width:0%"></div></div>
-          </div>
-          <div class="trend-bar-wrap">
-            <div class="trend-bar-label"><span>Updates contribution</span><span id="sbar-time">0</span></div>
-            <div class="trend-bar-bg"><div class="trend-bar-fill bar-red" id="sbar-timeFill" style="width:0%"></div></div>
-          </div>
-        </div>
-        <div style="padding-bottom:20px"></div>
       </div>
 
-      <!-- ── TAB: CHART ── -->
-      <div id="tab-chart" style="display:none">
-        <div class="card-title" style="margin-bottom:8px"><span class="icon">📈</span> Odds Movement Chart</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Visualises both teams' odds over time. Entry & hedge zones highlighted.</div>
-        <div class="chart-wrap">
-          <canvas id="oddsChart"></canvas>
-        </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:11px">
-          <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:3px;background:var(--accent);border-radius:2px"></div>Bet Team Odds</div>
-          <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:3px;background:var(--wait-yellow);border-radius:2px"></div>Other Team Odds</div>
-          <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;background:rgba(0,229,160,0.15);border-radius:2px"></div>Hedge Zone</div>
-        </div>
-        <div style="padding-bottom:20px"></div>
+      <div id="hc-noData" class="empty">Add an odds update to activate hedge calculator</div>
+      <div style="padding-bottom:20px"></div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tab-history" style="display:none">
+      <div id="missedHistBanner" style="display:none" class="warn-banner">⚠ <strong>Missed Best Hedge Point</strong> — <span id="missedHistText">—</span></div>
+      <div id="histEmpty" class="empty">No updates yet. Add odds updates above to begin.</div>
+      <div id="timelineBlock" style="display:none;margin-bottom:20px">
+        <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Match Timeline</div>
+        <div id="timelineItems"></div>
       </div>
+      <table class="tbl" id="histTable" style="display:none">
+        <thead><tr>
+          <th>Label</th><th id="thA">Team A</th><th id="thB">Team B</th>
+          <th>Chg (Bet)</th><th>Score</th><th>Signal</th>
+        </tr></thead>
+        <tbody id="histBody"></tbody>
+      </table>
+      <div style="padding-bottom:20px"></div>
+    </div>
 
-      <!-- ── TAB: HEDGE CALC ── -->
-      <div id="tab-hedge" style="display:none">
-        <div class="grid-2" style="margin-bottom:16px">
-          <div class="metric">
-            <div class="metric-label">Bet Amount</div>
-            <div class="metric-value" id="hc-betAmt" style="color:var(--text)">₹0</div>
-            <div class="metric-sub" id="hc-betTeam">—</div>
-          </div>
-          <div class="metric">
-            <div class="metric-label">Entry Odds</div>
-            <div class="metric-value" id="hc-entryOdds" style="color:var(--accent)">—</div>
-            <div class="metric-sub">At match start</div>
-          </div>
-        </div>
-
-        <div class="metric" style="margin-bottom:16px">
-          <div class="metric-label" style="margin-bottom:4px">Hedge Amount</div>
-          <div class="metric-value" id="hc-hedgeAmt" style="color:var(--wait-yellow);font-size:28px">₹—</div>
-          <div class="metric-sub" id="hc-hedgeFormula">—</div>
-        </div>
-
-        <div style="margin-bottom:16px">
-          <div class="profit-row"><span class="profit-label" id="hc-winLabelA">If Team A wins</span><span class="profit-amount profit-pos" id="hc-profitA">—</span></div>
-          <div class="profit-row"><span class="profit-label" id="hc-winLabelB">If Team B wins</span><span class="profit-amount profit-pos" id="hc-profitB">—</span></div>
-          <div class="profit-row"><span class="profit-label">Total Invested</span><span class="profit-amount" id="hc-totalInvest" style="color:var(--muted)">—</span></div>
-          <div class="profit-row" style="border:none"><span class="profit-label">Guaranteed Profit</span><span class="profit-amount" id="hc-guaranteed" style="color:var(--accent)">—</span></div>
-        </div>
-
-        <!-- Apply Hedge Action Panel -->
-        <div id="applyHedgePanel" class="apply-hedge-panel" style="display:none">
-          <div class="apply-hedge-title">⚡ Quick Apply Hedge</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="applyHedgeDesc">—</div>
-          <div class="grid-2" style="margin-bottom:12px">
-            <div class="metric">
-              <div class="metric-label">Place on opposite team</div>
-              <div class="metric-value" id="ah-team" style="color:var(--blue);font-size:16px">—</div>
-            </div>
-            <div class="metric">
-              <div class="metric-label">Amount to place</div>
-              <div class="metric-value" id="ah-amount" style="color:var(--wait-yellow);font-size:18px">₹—</div>
-            </div>
-          </div>
-          <div style="background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.15);border-radius:8px;padding:12px;font-size:12px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-              <span style="color:var(--muted)">If you apply hedge now:</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-              <span style="color:var(--muted)" id="ah-win1Label">—</span><span class="profit-pos" id="ah-win1">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between">
-              <span style="color:var(--muted)" id="ah-win2Label">—</span><span class="profit-pos" id="ah-win2">—</span>
-            </div>
-          </div>
-          <div id="hedgeAppliedMsg" style="display:none;margin-top:10px;padding:10px;background:rgba(0,229,160,0.1);border-radius:8px;font-size:12px;color:var(--accent);text-align:center">
-            ✔ Hedge Applied! Both profit scenarios locked above.
-          </div>
-        </div>
-
-        <div id="hc-noData" class="empty">Add odds updates to calculate hedge</div>
-        <div style="padding-bottom:20px"></div>
-      </div>
-
-      <!-- ── TAB: HISTORY ── -->
-      <div id="tab-history" style="display:none">
-        <div id="historyEmpty" class="empty">No updates yet. Add odds updates above to begin.</div>
-        <div id="missedHedgeHistory" style="display:none" class="missed-hedge-banner">
-          ⚠ <strong>Missed Best Hedge Point</strong>&nbsp;— <span id="missedHedgeText">—</span>
-        </div>
-        <table class="odds-table" id="historyTable" style="display:none">
-          <thead>
-            <tr>
-              <th>Label</th>
-              <th id="thA">Team A</th>
-              <th id="thB">Team B</th>
-              <th>Chg (Bet)</th>
-              <th>Score</th>
-              <th>Signal</th>
-            </tr>
-          </thead>
-          <tbody id="historyBody"></tbody>
-        </table>
-        <div style="padding-bottom:20px"></div>
-      </div>
-
-    </div><!-- /tabs card -->
-  </div><!-- /mainSystem -->
-
-</div><!-- /container -->
+  </div>
+</div>
+</div>
 
 <script>
-// ════════════════════════════════════════════
+// ════════════════════════════════
+// ENGINE MODULE
+// ════════════════════════════════
+const Engine = {
+  calcHedge(S) {
+    const last = S.updates[S.updates.length - 1];
+    const B = S.betAmt, O1 = S.entryOdds;
+    const curBet   = S.betTeam === 'A' ? last.oddsA : last.oddsB;
+    const curOther = S.betTeam === 'A' ? last.oddsB : last.oddsA;
+    const H = (B * O1) / curOther;
+    const pBet   = (B * O1) - B - H;
+    const pOther = (H * curOther) - H - B;
+    const guar = Math.min(pBet, pOther);
+    const state = guar > 10 ? 'PROFIT' : guar < -10 ? 'LOSS' : 'BREAKEVEN';
+    return { H, O2: curOther, pBet, pOther, guar, B, O1, state };
+  },
+
+  // ✅ NEW: Calculate hedge using FROZEN locked-in values
+  calcHedgeLocked(lock) {
+    // lock = { B, O1, H, O2, pBet, pOther, guar, otherTeamName }
+    // Just returns the frozen snapshot — no recalculation
+    return lock;
+  },
+
+  calcBestHedge(S) {
+    if (!S.bestOtherOddsAtBest) return null;
+    const B = S.betAmt, O1 = S.entryOdds, O2 = S.bestOtherOddsAtBest;
+    const H = (B * O1) / O2;
+    return Math.min((B * O1) - B - H, (H * O2) - H - B);
+  },
+  calcVolatility(updates) {
+    if (updates.length < 2) return 0;
+    const ch = updates.slice(1).map(u => Math.abs(u.changePct));
+    if (!ch.length) return 0;
+    const avg = ch.reduce((a, b) => a + b, 0) / ch.length;
+    return Math.sqrt(ch.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / ch.length);
+  },
+  detectReversal(updates) {
+    if (updates.length < 3) return false;
+    const n = updates.length;
+    return updates[n-1].changePct < 0 && updates[n-2].changePct < 0;
+  },
+  countConfs(updates, latestChg) {
+    let c = 0;
+    for (let i = updates.length - 1; i >= 1; i--) {
+      if (updates[i].changePct > 0) c++; else break;
+    }
+    if (latestChg > 0) c++;
+    return c;
+  }
+};
+
+// ════════════════════════════════
+// SCORE ENGINE MODULE
+// ════════════════════════════════
+const ScoreEngine = {
+  compute(S, oA, oB, chg) {
+    const curBet = S.betTeam === 'A' ? oA : oB;
+    const totalDrop = ((S.entryOdds - curBet) / S.entryOdds) * 100;
+    const dropScore  = Math.min(Math.max(totalDrop, 0) / 40 * 40, 40);
+    const confs      = Engine.countConfs(S.updates, chg);
+    const trendScore = Math.min(confs / 3 * 30, 30);
+    const vol        = Engine.calcVolatility(S.updates);
+    const stabScore  = Math.max(0, 20 - vol * 2);
+    const confScore  = Math.min(S.updates.length / 5 * 10, 10);
+    return {
+      total:      Math.round(dropScore + trendScore + stabScore + confScore),
+      dropScore:  Math.round(dropScore),
+      trendScore: Math.round(trendScore),
+      stabScore:  Math.round(stabScore),
+      confScore:  Math.round(confScore),
+      confs, totalDrop, vol
+    };
+  }
+};
+
+// ════════════════════════════════
+// SIGNAL ENGINE MODULE
+// ════════════════════════════════
+const SigEngine = {
+  MAP: {
+    HEDGE:   { text: '🟢 HEDGE NOW',       cls: 'sig-hedge'  },
+    EARLY:   { text: '🔵 EARLY HEDGE',     cls: 'sig-early'  },
+    SOON:    { text: '⚠ HEDGE SOON',       cls: 'sig-soon'   },
+    WAIT:    { text: '🟡 WAIT',            cls: 'sig-wait'   },
+    SAFE:    { text: '🟡 SAFE EXIT',       cls: 'sig-safe'   },
+    DAMAGE:  { text: '🔴 DAMAGE CONTROL', cls: 'sig-damage' },
+    EXIT:    { text: '🔴 EXIT RISK',       cls: 'sig-exit'   },
+    NONE:    { text: '⚪ MONITORING',      cls: 'sig-none'   },
+    LOCKED:  { text: '🔒 HEDGE LOCKED',    cls: 'sig-locked' }
+  },
+  compute(S, oA, oB, chg, sc) {
+    const curBet  = S.betTeam === 'A' ? oA : oB;
+    const curOther= S.betTeam === 'A' ? oB : oA;
+    const totalDrop = ((S.entryOdds - curBet) / S.entryOdds) * 100;
+    const score = sc.total, confs = sc.confs, vol = sc.vol;
+    const rising = chg < -3;
+    const reversal = Engine.detectReversal(S.updates);
+    const volHigh = vol > 8;
+    const H = (S.betAmt * S.entryOdds) / curOther;
+    const guar = Math.min(
+      (S.betAmt * S.entryOdds) - S.betAmt - H,
+      (H * curOther) - H - S.betAmt
+    );
+    if (guar < -30) return 'DAMAGE';
+    if (reversal && totalDrop > 5 && guar > 0) return 'HEDGE';
+    if (score >= 70 && totalDrop >= 20 && confs >= 2 && !volHigh) return 'HEDGE';
+    if (score >= 55 && confs >= 1 && !rising && !volHigh) return 'EARLY';
+    if (rising && confs >= 2 && totalDrop > 5 && guar > 0) return 'SOON';
+    if (score >= 40 || totalDrop >= 10) return 'WAIT';
+    if (Math.abs(guar) <= 20 && rising) return 'SAFE';
+    if (rising && totalDrop < 5) return 'EXIT';
+    return 'NONE';
+  },
+  info(sig) { return this.MAP[sig] || this.MAP.NONE; }
+};
+
+// ════════════════════════════════
 // STATE
-// ════════════════════════════════════════════
-let state = {
-  teamA:'', teamB:'',
-  initOddsA:0, initOddsB:0,
-  betTeam:'', betAmt:0,
-  entryOdds:0,
-  updates:[], // {label,oddsA,oddsB,changePct,signal,score,hedgeApplied}
-  started:false,
-  bestOddsBet:null, bestOddsUpdate:null,
-  hedgeApplied:false
+// ════════════════════════════════
+let S = {
+  teamA:'', teamB:'', betTeam:'', betAmt:0, entryOdds:0,
+  updates:[], started:false,
+  bestOddsBet:null, bestOtherOddsAtBest:null, bestOddsLabel:'START',
+  hedgeConfirmed:false,
+  // ✅ NEW: Frozen snapshot captured at hedge confirmation time
+  hedgeLock: null
+  /*
+    hedgeLock shape when set:
+    {
+      H,            // hedge amount placed
+      O2,           // hedge odds (other team's odds at execution time)
+      pBet,         // profit if bet team wins
+      pOther,       // profit if other team wins
+      guar,         // guaranteed min profit
+      B,            // original bet amount
+      O1,           // entry odds
+      state,        // PROFIT / LOSS / BREAKEVEN
+      otherTeamName // name of team the hedge is placed on
+    }
+  */
 };
 let oddsChart = null;
 
-// ════════════════════════════════════════════
-// INIT MATCH
-// ════════════════════════════════════════════
-function initMatch() {
-  const tA = document.getElementById('teamA').value.trim() || 'Team A';
-  const tB = document.getElementById('teamB').value.trim() || 'Team B';
-  const oA = parseFloat(document.getElementById('initOddsA').value);
-  const oB = parseFloat(document.getElementById('initOddsB').value);
-  const bt = document.getElementById('betTeam').value;
-  const ba = parseFloat(document.getElementById('betAmt').value);
-  if(!oA||!oB||!bt||!ba){alert('Please fill all fields.');return;}
+// ════════════════════════════════
+// UI CONTROLLER MODULE
+// ════════════════════════════════
+const UI = {
+  fmt(v)  { return v >= 0 ? `+₹${v.toFixed(2)}` : `-₹${Math.abs(v).toFixed(2)}`; },
+  clr(v)  { return v > 10 ? 'pos' : v < -10 ? 'neg' : 'neu'; },
+  chk(v)  { return v ? `<span style="color:var(--green)">✔ YES</span>` : `<span style="color:var(--muted)">✘ NO</span>`; },
+  el(id)  { return document.getElementById(id); },
+  set(id, txt, cls) { const e = this.el(id); if (!e) return; if (txt !== undefined) e.textContent = txt; if (cls) e.className = cls; },
+  html(id, h) { const e = this.el(id); if (e) e.innerHTML = h; },
 
-  state = {
-    teamA:tA, teamB:tB, initOddsA:oA, initOddsB:oB,
-    betTeam:bt, betAmt:ba, entryOdds:bt==='A'?oA:oB,
+  setSig(elId, sig) {
+    const e = this.el(elId); if (!e) return;
+    const i = SigEngine.info(sig);
+    e.className = `sig ${i.cls}`;
+    e.textContent = i.text;
+  },
+
+  renderAll() {
+    this.renderSignalBar();
+    this.renderLockState();
+    this.renderProfitCard();
+    this.renderAnalysis();
+    this.renderScore();
+    this.renderHedge();
+    this.renderHistory();
+    this.renderChart();
+  },
+
+  // ✅ NEW: Renders the locked hedge summary card + disables live update UI
+  renderLockState() {
+    const locked = S.hedgeConfirmed && S.hedgeLock !== null;
+
+    // Header badge
+    const hdrBadge = this.el('headerBadge');
+    if (locked) {
+      hdrBadge.className = 'locked-live-badge';
+      hdrBadge.innerHTML = '🔒 HEDGE LOCKED';
+    } else {
+      hdrBadge.className = 'live-badge';
+      hdrBadge.innerHTML = '<div class="live-dot"></div>LIVE TRACKER';
+    }
+
+    // Locked summary card
+    const lsCard = this.el('lockedSummaryCard');
+    if (locked) {
+      const lk = S.hedgeLock;
+      lsCard.style.display = 'block';
+
+      const tA = S.teamA, tB = S.teamB;
+      const ot = S.betTeam === 'A' ? tB : tA;
+
+      this.set('ls-lbl1', `If ${tA} wins`);
+      this.set('ls-lbl2', `If ${tB} wins`);
+
+      const v1 = this.el('ls-val1');
+      v1.textContent = this.fmt(lk.pBet);
+      v1.className = `pbox-val ${this.clr(lk.pBet)}`;
+
+      const v2 = this.el('ls-val2');
+      v2.textContent = this.fmt(lk.pOther);
+      v2.className = `pbox-val ${this.clr(lk.pOther)}`;
+
+      this.set('ls-team', ot);
+      this.set('ls-hedgeAmt', `₹${lk.H.toFixed(2)}`);
+      this.el('ls-hedgeOdds').innerHTML = `${lk.O2.toFixed(2)} <span class="frozen-badge" style="margin-left:6px">🔒 FROZEN</span>`;
+      this.set('ls-totalInvest', `₹${(lk.B + lk.H).toFixed(2)}`);
+      const guarEl = this.el('ls-guar');
+      guarEl.textContent = this.fmt(lk.guar);
+      guarEl.className = `lock-frozen-val ${this.clr(lk.guar)}`;
+      this.set('ls-formula', `Hedge: ₹${lk.H.toFixed(0)} on ${ot} @ ${lk.O2.toFixed(2)} → locks ${this.fmt(lk.guar)} regardless of result.`);
+    } else {
+      lsCard.style.display = 'none';
+    }
+
+    // Disable live update card
+    const wrapper = this.el('updateCardWrapper');
+    if (locked) {
+      wrapper.classList.add('card-disabled-overlay');
+      ['updateLabel','newOddsA','newOddsB'].forEach(id => {
+        const el = this.el(id); if (el) el.disabled = true;
+      });
+      const btn = this.el('addUpdateBtn');
+      if (btn) btn.disabled = true;
+    } else {
+      wrapper.classList.remove('card-disabled-overlay');
+      ['updateLabel','newOddsA','newOddsB'].forEach(id => {
+        const el = this.el(id); if (el) el.disabled = false;
+      });
+      const btn = this.el('addUpdateBtn');
+      if (btn) btn.disabled = false;
+    }
+  },
+
+  renderSignalBar() {
+    if (!S.updates.length) return;
+
+    // ✅ If locked, show LOCKED signal permanently — do NOT use live signal
+    if (S.hedgeConfirmed && S.hedgeLock) {
+      this.setSig('sigTop', 'LOCKED');
+      this.el('applyBtn').style.display = 'none';
+      this.el('missedBadge').style.display = 'none';
+      return;
+    }
+
+    const sig = S.updates[S.updates.length - 1].signal;
+    this.setSig('sigTop', sig);
+    const showBtn = ['HEDGE','EARLY','SOON'].includes(sig) && !S.hedgeConfirmed;
+    this.el('applyBtn').style.display = showBtn ? 'inline-flex' : 'none';
+    const m = checkMissed();
+    this.el('missedBadge').style.display = m.missed ? 'inline-flex' : 'none';
+  },
+
+  renderProfitCard() {
+    // ✅ If hedge locked, profit card shows frozen values — no live recalc
+    if (S.hedgeConfirmed && S.hedgeLock) {
+      if (S.updates.length < 2) { this.el('profitCard').style.display = 'none'; return; }
+      this.el('profitCard').style.display = 'block';
+      const lk = S.hedgeLock;
+      const tA = S.teamA, tB = S.teamB;
+
+      this.set('pbox-Albl', `If ${tA} wins`);
+      this.set('pbox-Blbl', `If ${tB} wins`);
+
+      const pA = this.el('pbox-Aval');
+      pA.textContent = this.fmt(lk.pBet); pA.className = `pbox-val ${this.clr(lk.pBet)}`;
+      const pB = this.el('pbox-Bval');
+      pB.textContent = this.fmt(lk.pOther); pB.className = `pbox-val ${this.clr(lk.pOther)}`;
+      this.set('pbox-Asub', S.betTeam==='A' ? 'Original bet wins' : 'Hedge wins');
+      this.set('pbox-Bsub', S.betTeam==='B' ? 'Original bet wins' : 'Hedge wins');
+      this.set('po-hedge', `₹${lk.H.toFixed(2)} 🔒`);
+      this.set('po-invest', `₹${(lk.B + lk.H).toFixed(2)}`);
+      const gEl = this.el('po-guar');
+      gEl.textContent = this.fmt(lk.guar); gEl.className = `m-val ${this.clr(lk.guar)}`;
+      this.set('po-formula', `🔒 FROZEN — Hedge executed at ${lk.O2.toFixed(2)}. Values will not change.`);
+      this.el('missedBlock').style.display = 'none';
+      return;
+    }
+
+    if (S.updates.length < 2) { this.el('profitCard').style.display = 'none'; return; }
+    this.el('profitCard').style.display = 'block';
+    const h = Engine.calcHedge(S);
+    const tA = S.teamA, tB = S.teamB;
+    const ot = S.betTeam === 'A' ? tB : tA;
+
+    this.set('pbox-Albl', `If ${tA} wins`);
+    this.set('pbox-Blbl', `If ${tB} wins`);
+    const pA = this.el('pbox-Aval');
+    pA.textContent = this.fmt(h.pBet); pA.className = `pbox-val ${this.clr(h.pBet)}`;
+    const pB = this.el('pbox-Bval');
+    pB.textContent = this.fmt(h.pOther); pB.className = `pbox-val ${this.clr(h.pOther)}`;
+    this.set('pbox-Asub', S.betTeam==='A' ? 'Original bet wins' : 'Hedge wins');
+    this.set('pbox-Bsub', S.betTeam==='B' ? 'Original bet wins' : 'Hedge wins');
+    this.set('po-hedge', `₹${h.H.toFixed(2)}`);
+    this.set('po-invest', `₹${(h.B + h.H).toFixed(2)}`);
+    const gEl = this.el('po-guar');
+    gEl.textContent = this.fmt(h.guar); gEl.className = `m-val ${this.clr(h.guar)}`;
+    this.set('po-formula', `Place ₹${h.H.toFixed(0)} on ${ot} @ ${h.O2.toFixed(2)} → locks ${this.fmt(h.guar)} profit regardless of result.`);
+
+    const m = checkMissed();
+    if (m.missed && m.bestProfit !== null) {
+      this.el('missedBlock').style.display = 'block';
+      this.set('mp-best', this.fmt(m.bestProfit));
+      this.set('mp-curr', this.fmt(h.guar));
+      const diff = m.bestProfit - h.guar;
+      this.set('mp-diff', `₹${Math.abs(diff).toFixed(2)}`);
+    } else { this.el('missedBlock').style.display = 'none'; }
+  },
+
+  renderAnalysis() {
+    if (!S.updates.length) return;
+    const last = S.updates[S.updates.length - 1];
+    const curBet   = S.betTeam==='A' ? last.oddsA : last.oddsB;
+    const curOther = S.betTeam==='A' ? last.oddsB : last.oddsA;
+    const totalDrop= ((S.entryOdds - curBet) / S.entryOdds) * 100;
+    const vol = Engine.calcVolatility(S.updates);
+    const rising = last.changePct < -3;
+    const sObj = (typeof last.score === 'object') ? last.score : { confs:0, vol:0, total:0 };
+    const confs = sObj.confs || 0;
+    const reversal = Engine.detectReversal(S.updates);
+
+    // ✅ If locked, use frozen hedge values for profit state display
+    const h = S.hedgeConfirmed && S.hedgeLock ? S.hedgeLock : (S.updates.length >= 2 ? Engine.calcHedge(S) : null);
+
+    this.set('an-curBet', curBet.toFixed(2));
+    const dd = totalDrop>0?'▼':totalDrop<0?'▲':'—';
+    const dc = totalDrop>0?'var(--green)':totalDrop<0?'var(--red)':'var(--muted)';
+    this.html('an-betChg', `<span style="color:${dc}">${dd} ${Math.abs(totalDrop).toFixed(1)}% from entry</span>`);
+    this.set('an-curOther', curOther.toFixed(2));
+    const cd = last.changePct>0?'▼':last.changePct<0?'▲':'—';
+    this.html('an-otherChg', `Last: ${cd} ${Math.abs(last.changePct).toFixed(1)}%`);
+
+    const risk = getRisk(totalDrop, rising, vol);
+    this.set('riskLbl', risk.level); this.el('riskLbl').style.color = risk.color;
+    this.el('riskBar').style.cssText += `;width:${risk.pct}%;background:${risk.color}`;
+    this.set('riskDesc', risk.desc);
+
+    this.set('an-drop', `${totalDrop.toFixed(1)}%`);
+    this.el('an-dropBar').style.width = `${Math.min(Math.max(totalDrop,0),40)/40*100}%`;
+    this.el('an-dropBar').className = `bar-fill ${totalDrop>=20?'bg':totalDrop>=10?'by':'br'}`;
+    this.set('an-confs', `${confs}/3`);
+    this.el('an-confsBar').style.width = `${Math.min(confs/3,1)*100}%`;
+    this.set('an-vol', vol.toFixed(1));
+    this.el('an-volBar').style.width = `${Math.min(vol*5,100)}%`;
+
+    const remPot = S.bestOddsBet ? ((S.entryOdds - S.bestOddsBet) / S.entryOdds * 100) : 0;
+    const remLeft = Math.max(remPot - Math.abs(totalDrop), 0);
+    this.set('an-remPot', `${remLeft.toFixed(1)}% left`);
+    this.el('an-remPotBar').style.width = `${Math.min(remLeft/20,1)*100}%`;
+
+    this.html('d-drop20', this.chk(totalDrop >= 20));
+    this.html('d-score', `<span style="color:${sObj.total>=70?'var(--green)':sObj.total>=40?'var(--yellow)':'var(--muted)'}">${sObj.total}/100</span>`);
+    this.html('d-confs2', this.chk(confs >= 2));
+    this.html('d-rev', reversal ? `<span style="color:var(--red)">⚠ REVERSAL</span>` : `<span style="color:var(--muted)">✘ No</span>`);
+    this.html('d-volFil', vol>8 ? `<span style="color:var(--red)">⚠ HIGH (${vol.toFixed(1)})</span>` : `<span style="color:var(--green)">✔ OK (${vol.toFixed(1)})</span>`);
+
+    // ✅ If locked, show frozen profit state
+    if (S.hedgeConfirmed && S.hedgeLock) {
+      const lk = S.hedgeLock;
+      this.html('d-profState', `<span class="${lk.guar>10?'pos':lk.guar<-10?'neg':'neu'}">🔒 LOCKED ${this.fmt(lk.guar)}</span>`);
+    } else if (h) {
+      this.html('d-profState', h.guar>10 ? `<span class="pos">✔ PROFIT ${this.fmt(h.guar)}</span>` : h.guar<-10 ? `<span class="neg">✘ LOSS ${this.fmt(h.guar)}</span>` : `<span class="neu">≈ BREAKEVEN</span>`);
+    } else {
+      this.html('d-profState', '—');
+    }
+
+    const m = checkMissed();
+    this.html('d-best', m.missed ? `<span style="color:var(--red)">⚠ MISSED @ ${S.bestOddsBet.toFixed(2)} (${S.bestOddsLabel})</span>` : (totalDrop>=15?`<span style="color:var(--green)">✔ NOW IS GOOD</span>`:`<span style="color:var(--muted)">— Watching</span>`));
+  },
+
+  renderScore() {
+    if (S.updates.length < 2) return;
+    const sObj = S.updates[S.updates.length-1].score;
+    if (!sObj || typeof sObj !== 'object') return;
+    const s = sObj.total, circ = 251.2;
+    const ring = this.el('ringFill');
+    ring.style.strokeDashoffset = circ - (s/100)*circ;
+    ring.style.stroke = s>=70?'var(--green)':s>=40?'var(--yellow)':'var(--red)';
+    this.set('ringNum', s); this.el('ringNum').style.color = s>=70?'var(--green)':s>=40?'var(--yellow)':'var(--red)';
+    this.set('sf-drop', sObj.dropScore); this.set('sf-trend', sObj.trendScore);
+    this.set('sf-stab', sObj.stabScore); this.set('sf-conf', sObj.confScore);
+    const vEl = this.el('scoreVerdict'), dEl = this.el('scoreDesc');
+    vEl.className = 'sig';
+    if (s>=70){ vEl.classList.add('sig-hedge'); vEl.textContent='🟢 HEDGE NOW'; dEl.textContent='Strong score. All conditions confirmed — hedge immediately.'; }
+    else if (s>=55){ vEl.classList.add('sig-early'); vEl.textContent='🔵 EARLY HEDGE'; dEl.textContent='Good score. Capture early profit — trend building well.'; }
+    else if (s>=40){ vEl.classList.add('sig-wait'); vEl.textContent='🟡 PREPARE'; dEl.textContent='Score building. Wait 1–2 more confirmations.'; }
+    else { vEl.classList.add('sig-none'); vEl.textContent='⚪ WAIT'; dEl.textContent='Score too low. Not enough signal strength yet.'; }
+    this.set('sb-drop',sObj.dropScore); this.el('sb-dropF').style.width=(sObj.dropScore/40*100)+'%';
+    this.set('sb-trend',sObj.trendScore); this.el('sb-trendF').style.width=(sObj.trendScore/30*100)+'%';
+    this.set('sb-stab',sObj.stabScore); this.el('sb-stabF').style.width=(sObj.stabScore/20*100)+'%';
+    this.set('sb-conf',sObj.confScore); this.el('sb-confF').style.width=(sObj.confScore/10*100)+'%';
+  },
+
+  renderHedge() {
+    if (S.updates.length < 1) return;
+
+    const ot = S.betTeam==='A' ? S.teamB : S.teamA;
+    const bt = S.betTeam==='A' ? S.teamA : S.teamB;
+
+    // ✅ If hedge is locked, use FROZEN values — no live recalc
+    const h = (S.hedgeConfirmed && S.hedgeLock) ? S.hedgeLock : Engine.calcHedge(S);
+
+    this.set('hc-bet', `₹${h.B.toLocaleString()}`); this.set('hc-betTeam', `On ${bt}`);
+    this.set('hc-entry', h.O1.toFixed(2));
+    this.set('hc-amt', `₹${h.H.toFixed(2)}${S.hedgeConfirmed ? ' 🔒' : ''}`);
+    this.set('hc-formula', S.hedgeConfirmed
+      ? `🔒 FROZEN — Hedge executed on ${ot} @ ${h.O2.toFixed(2)}`
+      : `Place ₹${h.H.toFixed(0)} on ${ot} @ ${h.O2.toFixed(2)}`
+    );
+    this.set('hc-lblA', `If ${S.teamA} wins`); this.set('hc-lblB', `If ${S.teamB} wins`);
+    const eA=this.el('hc-pA'); eA.textContent=this.fmt(h.pBet); eA.className=`pr-val ${this.clr(h.pBet)}`;
+    const eB=this.el('hc-pB'); eB.textContent=this.fmt(h.pOther); eB.className=`pr-val ${this.clr(h.pOther)}`;
+    this.set('hc-invest',`₹${(h.B+h.H).toFixed(2)}`);
+    const gEl=this.el('hc-guar'); gEl.textContent=this.fmt(h.guar); gEl.className=`pr-val ${this.clr(h.guar)}`;
+    const stEl=this.el('hc-state');
+    if (h.state==='PROFIT') stEl.innerHTML=`<span class="sig sig-hedge" style="font-size:10px;padding:3px 10px">✔ PROFIT</span>`;
+    else if (h.state==='LOSS') stEl.innerHTML=`<span class="sig sig-damage" style="font-size:10px;padding:3px 10px">✘ DAMAGE CONTROL</span>`;
+    else stEl.innerHTML=`<span class="sig sig-safe" style="font-size:10px;padding:3px 10px">≈ SAFE EXIT</span>`;
+
+    this.el('hc-noData').style.display = S.updates.length > 1 ? 'none' : 'block';
+
+    // ✅ Apply Panel — hide entirely when locked (already confirmed)
+    if (S.hedgeConfirmed && S.hedgeLock) {
+      this.el('applyPanel').style.display = 'block';
+      this.set('applyDesc', `🔒 Hedge locked on ${ot} @ ${h.O2.toFixed(2)}. All values are frozen.`);
+      this.set('ap-team', ot);
+      this.set('ap-amt', `₹${h.H.toFixed(2)}`);
+      this.set('ap-lbl1', `If ${S.teamA} wins →`); this.set('ap-lbl2', `If ${S.teamB} wins →`);
+      this.set('ap-p1', this.fmt(h.pBet)); this.set('ap-p2', this.fmt(h.pOther));
+      this.el('confirmBtn').style.display = 'none';
+      this.el('lockedMsg').style.display = 'block';
+    } else {
+      const sig = S.updates[S.updates.length-1].signal;
+      const showPanel = ['HEDGE','EARLY','SOON','SAFE','DAMAGE'].includes(sig);
+      this.el('applyPanel').style.display = showPanel ? 'block' : 'none';
+      if (showPanel) {
+        this.set('applyDesc', `Signal: ${SigEngine.info(sig).text} — Hedge on ${ot} to lock outcome.`);
+        this.set('ap-team', ot); this.set('ap-amt', `₹${h.H.toFixed(2)}`);
+        this.set('ap-lbl1', `If ${S.teamA} wins →`); this.set('ap-lbl2', `If ${S.teamB} wins →`);
+        this.set('ap-p1', this.fmt(h.pBet)); this.set('ap-p2', this.fmt(h.pOther));
+        this.el('confirmBtn').style.display = 'flex';
+        this.el('lockedMsg').style.display = 'none';
+      }
+    }
+
+    // Recommendation — use frozen values if locked
+    const last = S.updates[S.updates.length-1];
+    const score = (typeof last.score==='object') ? last.score.total : 0;
+    const conf = Math.min(score + (h.guar > 0 ? 10 : 0), 100);
+    const sig = S.hedgeConfirmed ? 'LOCKED' : last.signal;
+    this.set('rec-action', SigEngine.info(sig).text);
+    this.set('rec-amt', S.hedgeConfirmed
+      ? `₹${h.H.toFixed(0)} on ${ot} @ ${h.O2.toFixed(2)} 🔒`
+      : `₹${h.H.toFixed(0)} on ${ot} @ ${h.O2.toFixed(2)}`
+    );
+    const recP = this.el('rec-profit');
+    recP.textContent = this.fmt(h.guar); recP.className = `rec-val ${this.clr(h.guar)}`;
+    this.set('rec-timing', S.hedgeConfirmed ? '🔒 Executed' : (score>=70?'✔ Excellent':score>=40?'⚠ Fair':'✘ Poor'));
+    this.set('rec-risk', h.state==='PROFIT'?'🟢 Low':h.state==='LOSS'?'🔴 High':'🟡 Medium');
+    this.el('rec-confBar').style.width = (S.hedgeConfirmed ? 100 : conf) + '%';
+    this.set('rec-confPct', (S.hedgeConfirmed ? 100 : conf) + '%');
+  },
+
+  renderHistory() {
+    const tbody=this.el('histBody'), table=this.el('histTable'), empty=this.el('histEmpty');
+    const m = checkMissed();
+    if (m.missed) {
+      this.el('missedHistBanner').style.display='block';
+      this.set('missedHistText', `Best odds were ${S.bestOddsBet.toFixed(2)} at "${S.bestOddsLabel}". Odds have rebounded — optimal window passed.`);
+    } else { this.el('missedHistBanner').style.display='none'; }
+
+    if (!S.updates.length) { table.style.display='none'; empty.style.display='block'; return; }
+    table.style.display='table'; empty.style.display='none';
+    tbody.innerHTML='';
+
+    S.updates.forEach((u, i) => {
+      const tr = document.createElement('tr');
+      const chg = i===0?'—':(u.changePct>0?`<span class="cdn">▼ ${u.changePct.toFixed(1)}%</span>`:u.changePct<0?`<span class="cup">▲ ${Math.abs(u.changePct).toFixed(1)}%</span>`:`<span class="cne">—</span>`);
+      const sc = i===0?'—':(typeof u.score==='object'?u.score.total:0);
+      const scC = typeof sc==='number'?(sc>=70?'var(--green)':sc>=40?'var(--yellow)':'var(--muted)'):'var(--muted)';
+      const si = SigEngine.info(u.signal);
+      const sigH = i===0?'—':`<span class="sig ${si.cls}" style="font-size:9px;padding:3px 8px">${si.text.replace(/[🟢🔵⚠🟡🔴⚪🔒]/u,'').trim()}</span>`;
+      tr.innerHTML=`<td style="color:var(--muted)">${u.label}</td><td>${u.oddsA.toFixed(2)}</td><td>${u.oddsB.toFixed(2)}</td><td>${chg}</td><td style="font-family:'Syne',sans-serif;font-weight:700;color:${scC}">${sc}</td><td>${sigH}</td>`;
+      tbody.prepend(tr);
+    });
+
+    const tlBlock = this.el('timelineBlock'), tlItems = this.el('timelineItems');
+    if (S.updates.length >= 2) {
+      tlBlock.style.display='block'; tlItems.innerHTML='';
+      S.updates.forEach((u, i) => {
+        const si = SigEngine.info(u.signal);
+        const isBest = u.label === S.bestOddsLabel;
+        const isLast = i === S.updates.length - 1;
+        const dotCls = isLast||['HEDGE','EARLY'].includes(u.signal)?'tl-dot tl-active':u.signal==='DAMAGE'?'tl-dot tl-warn':'tl-dot tl-done';
+        const d = document.createElement('div');
+        d.className = 'tl-item';
+        d.innerHTML=`${i<S.updates.length-1?'<div class="tl-line"></div>':''}<div class="${dotCls}"></div><div style="flex:1"><div class="tl-lbl" style="color:${isLast?'var(--accent)':'var(--text)'}">${u.label}${isBest?' ⭐':''}</div><div class="tl-desc">${si.text} | Odds: ${S.betTeam==='A'?u.oddsA:u.oddsB}${isBest?' — Best point':''}</div></div>`;
+        tlItems.appendChild(d);
+      });
+    }
+  },
+
+  renderChart() {
+    if (!S.updates.length) return;
+    const ctx = this.el('oddsChart').getContext('2d');
+    const labels   = S.updates.map(u => u.label);
+    const betOdds  = S.updates.map(u => S.betTeam==='A' ? u.oddsA : u.oddsB);
+    const othrOdds = S.updates.map(u => S.betTeam==='A' ? u.oddsB : u.oddsA);
+    const hz = S.entryOdds * 0.80;
+    if (oddsChart) oddsChart.destroy();
+    oddsChart = new Chart(ctx, {
+      type:'line',
+      data:{ labels, datasets:[
+        { label:S.betTeam==='A'?S.teamA:S.teamB, data:betOdds, borderColor:'#00e5a0', backgroundColor:'rgba(0,229,160,0.07)', borderWidth:2.5, pointBackgroundColor:'#00e5a0', pointRadius:5, tension:0.35, fill:false },
+        { label:S.betTeam==='A'?S.teamB:S.teamA, data:othrOdds, borderColor:'#ffc94a', backgroundColor:'rgba(255,201,74,0.07)', borderWidth:2.5, pointBackgroundColor:'#ffc94a', pointRadius:5, tension:0.35, fill:false },
+        { label:'Hedge Zone', data:Array(labels.length).fill(hz), borderColor:'rgba(0,229,160,0.35)', borderDash:[7,5], borderWidth:1.5, pointRadius:0, fill:false }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{labels:{color:'#666e82',font:{family:'Space Mono',size:10}}}, tooltip:{backgroundColor:'#181b22',borderColor:'#252830',borderWidth:1,titleColor:'#e8eaf0',bodyColor:'#666e82',titleFont:{family:'Syne',weight:'bold'}} },
+        scales:{ x:{ticks:{color:'#666e82',font:{family:'Space Mono',size:9}},grid:{color:'#1a1d24'}}, y:{ticks:{color:'#666e82',font:{family:'Space Mono',size:9}},grid:{color:'#1a1d24'}} }
+      }
+    });
+  }
+};
+
+// ════════════════════════════════
+// HELPERS
+// ════════════════════════════════
+function getRisk(totalDrop, rising, vol) {
+  if (rising && totalDrop < 5) return { level:'HIGH',   pct:90, color:'var(--red)',    desc:'Odds reversing — loss risk rising' };
+  if (vol > 8)                 return { level:'HIGH',   pct:80, color:'var(--red)',    desc:'High volatility — unstable signal' };
+  if (rising)                  return { level:'MEDIUM', pct:60, color:'var(--yellow)', desc:'Odds rising — watch closely' };
+  if (totalDrop < 10)          return { level:'MEDIUM', pct:40, color:'var(--yellow)', desc:'Monitoring — building momentum' };
+  return                              { level:'LOW',    pct:18, color:'var(--green)',  desc:'Odds falling in your favour' };
+}
+
+function checkMissed() {
+  if (S.updates.length < 3 || !S.bestOddsBet) return { missed:false };
+  const last = S.updates[S.updates.length-1];
+  const curBet = S.betTeam==='A' ? last.oddsA : last.oddsB;
+  if (curBet > S.bestOddsBet * 1.05 && S.bestOddsBet < S.entryOdds * 0.82) {
+    return { missed:true, best:S.bestOddsBet.toFixed(2), at:S.bestOddsLabel, bestProfit:Engine.calcBestHedge(S) };
+  }
+  return { missed:false };
+}
+
+// ════════════════════════════════
+// MAIN ACTIONS
+// ════════════════════════════════
+function initMatch() {
+  const tA=document.getElementById('teamA').value.trim()||'Team A';
+  const tB=document.getElementById('teamB').value.trim()||'Team B';
+  const oA=parseFloat(document.getElementById('initOddsA').value);
+  const oB=parseFloat(document.getElementById('initOddsB').value);
+  const bt=document.getElementById('betTeam').value;
+  const ba=parseFloat(document.getElementById('betAmt').value);
+  if (!oA||!oB||!bt||!ba) { alert('Please fill all fields.'); return; }
+
+  const eo = bt==='A' ? oA : oB;
+  const eoo= bt==='A' ? oB : oA;
+  S = {
+    teamA:tA, teamB:tB, betTeam:bt, betAmt:ba, entryOdds:eo,
     updates:[], started:true,
-    bestOddsBet:bt==='A'?oA:oB, bestOddsUpdate:'START',
-    hedgeApplied:false
+    bestOddsBet:eo, bestOtherOddsAtBest:eoo, bestOddsLabel:'START',
+    hedgeConfirmed:false,
+    hedgeLock:null   // ✅ starts null — nothing frozen yet
   };
-  state.updates.push({label:'START',oddsA:oA,oddsB:oB,changePct:0,signal:'NONE',score:0});
+  S.updates.push({ label:'START', oddsA:oA, oddsB:oB, changePct:0, signal:'NONE', score:0 });
 
   document.getElementById('mainSystem').style.display='block';
   document.getElementById('matchTitle').textContent=`${tA}  vs  ${tB}`;
   document.getElementById('betSummary').textContent=`${bt==='A'?tA:tB}  ×  ₹${ba.toLocaleString()}`;
-  document.getElementById('entryOddsDisplay').textContent=state.entryOdds.toFixed(2);
+  document.getElementById('entryOddsDisplay').textContent=eo.toFixed(2);
   document.getElementById('oddsALabel').textContent=`${tA} Odds`;
   document.getElementById('oddsBLabel').textContent=`${tB} Odds`;
   document.getElementById('thA').textContent=tA;
   document.getElementById('thB').textContent=tB;
 
-  renderAll();
-  document.getElementById('mainSystem').scrollIntoView({behavior:'smooth'});
+  UI.renderAll();
+  document.getElementById('mainSystem').scrollIntoView({ behavior:'smooth' });
 }
 
-// ════════════════════════════════════════════
-// ADD ODDS UPDATE
-// ════════════════════════════════════════════
-function addOddsUpdate() {
-  if(!state.started){alert('Start tracking first.');return;}
-  const label = document.getElementById('updateLabel').value.trim()||`Update ${state.updates.length}`;
-  const oA = parseFloat(document.getElementById('newOddsA').value);
-  const oB = parseFloat(document.getElementById('newOddsB').value);
-  if(!oA||!oB){alert('Enter both odds.');return;}
+function addUpdate() {
+  // ✅ Block new updates if hedge is locked
+  if (S.hedgeConfirmed && S.hedgeLock) {
+    alert('🔒 Hedge is locked. Live updates are disabled. Reset to start a new session.');
+    return;
+  }
+  if (!S.started) { alert('Start tracking first.'); return; }
+  const label=document.getElementById('updateLabel').value.trim()||`Update ${S.updates.length}`;
+  const oA=parseFloat(document.getElementById('newOddsA').value);
+  const oB=parseFloat(document.getElementById('newOddsB').value);
+  if (!oA||!oB) { alert('Enter both odds.'); return; }
 
-  const prev = state.updates[state.updates.length-1];
-  const prevBetOdds = state.betTeam==='A' ? prev.oddsA : prev.oddsB;
-  const curBetOdds  = state.betTeam==='A' ? oA : oB;
-  const changePct   = ((prevBetOdds - curBetOdds)/prevBetOdds)*100;
+  const prev=S.updates[S.updates.length-1];
+  const prevBet=S.betTeam==='A'?prev.oddsA:prev.oddsB;
+  const curBet =S.betTeam==='A'?oA:oB;
+  const curOther=S.betTeam==='A'?oB:oA;
+  const chg=((prevBet-curBet)/prevBet)*100;
 
-  // Track best (lowest) odds for bet team = most favourable hedge point
-  if(curBetOdds < state.bestOddsBet) {
-    state.bestOddsBet = curBetOdds;
-    state.bestOddsUpdate = label;
+  if (curBet < S.bestOddsBet) {
+    S.bestOddsBet=curBet; S.bestOtherOddsAtBest=curOther; S.bestOddsLabel=label;
   }
 
-  const score  = computeScore(oA, oB, changePct, state.updates.length);
-  const signal = computeSignal(oA, oB, changePct, score);
-
-  state.updates.push({label,oddsA:oA,oddsB:oB,changePct,signal,score});
+  const score = ScoreEngine.compute(S, oA, oB, chg);
+  const signal= SigEngine.compute(S, oA, oB, chg, score);
+  S.updates.push({ label, oddsA:oA, oddsB:oB, changePct:chg, signal, score });
 
   document.getElementById('updateLabel').value='';
   document.getElementById('newOddsA').value='';
   document.getElementById('newOddsB').value='';
-
-  renderAll();
+  UI.renderAll();
 }
 
-// ════════════════════════════════════════════
-// COMPUTE SCORE (0–100)
-// ════════════════════════════════════════════
-function computeScore(oA, oB, latestChangePct, prevLen) {
-  const curBetOdds = state.betTeam==='A' ? oA : oB;
-  const totalDrop  = ((state.entryOdds - curBetOdds)/state.entryOdds)*100;
-
-  // Factor 1: % drop (40pts max)
-  const dropScore = Math.min(Math.max(totalDrop,0)/40*40, 40);
-
-  // Factor 2: trend confirmations (30pts max)
-  let confirmations = 0;
-  const updates = state.updates;
-  for(let i=updates.length-1;i>=1;i--) {
-    if(updates[i].changePct>0) confirmations++;
-    else break;
-  }
-  if(latestChangePct>0) confirmations++;
-  const trendScore = Math.min(confirmations/3*30, 30);
-
-  // Factor 3: stability — low volatility = high stability (20pts max)
-  const volatility = computeVolatility();
-  const stabScore  = Math.max(0, 20 - volatility*2);
-
-  // Factor 4: number of updates as confidence (10pts max)
-  const updateScore = Math.min((prevLen)/5*10, 10);
-
-  return {
-    total: Math.round(dropScore+trendScore+stabScore+updateScore),
-    dropScore:Math.round(dropScore),
-    trendScore:Math.round(trendScore),
-    stabScore:Math.round(stabScore),
-    updateScore:Math.round(updateScore),
-    confirmations, totalDrop, volatility
-  };
-}
-
-// ════════════════════════════════════════════
-// COMPUTE VOLATILITY
-// ════════════════════════════════════════════
-function computeVolatility() {
-  const updates = state.updates;
-  if(updates.length<2) return 0;
-  const changes = updates.slice(1).map(u=>Math.abs(u.changePct));
-  const avg = changes.reduce((a,b)=>a+b,0)/changes.length;
-  const variance = changes.reduce((a,b)=>a+Math.pow(b-avg,2),0)/changes.length;
-  return Math.sqrt(variance);
-}
-
-// ════════════════════════════════════════════
-// COMPUTE SIGNAL
-// ════════════════════════════════════════════
-function computeSignal(oA, oB, latestChangePct, scoreObj) {
-  const curBetOdds = state.betTeam==='A' ? oA : oB;
-  const totalDrop  = ((state.entryOdds - curBetOdds)/state.entryOdds)*100;
-  const rising     = latestChangePct < -5;
-  const score      = scoreObj.total;
-  const confs      = scoreObj.confirmations;
-
-  if(score >= 70 && totalDrop>=20 && confs>=2) return 'HEDGE';
-  if(totalDrop>=10 && confs>=1 && !rising)     return 'EARLY';  // Early hedge
-  if(score >= 40 || totalDrop>=10)             return 'WAIT';
-  if(rising && totalDrop<5)                    return 'EXIT';
-  if(rising)                                   return 'EXIT';
-  return 'NONE';
-}
-
-// ════════════════════════════════════════════
-// HEDGE CALCULATION
-// ════════════════════════════════════════════
-function calcHedge() {
-  const last = state.updates[state.updates.length-1];
-  const curBetOdds   = state.betTeam==='A' ? last.oddsA : last.oddsB;
-  const curOtherOdds = state.betTeam==='A' ? last.oddsB : last.oddsA;
-  const B  = state.betAmt;
-  const O1 = state.entryOdds;
-  const O2 = curOtherOdds;
-  const H  = (B*O1)/O2;
-  const profitIfBetWins   = (B*O1)-B-H;
-  const profitIfOtherWins = (H*O2)-H-B;
-  const guaranteed = Math.min(profitIfBetWins, profitIfOtherWins);
-  return {H, O2, profitIfBetWins, profitIfOtherWins, guaranteed, B, O1};
-}
-
-// ════════════════════════════════════════════
-// RISK METER
-// ════════════════════════════════════════════
-function getRisk(totalDrop, rising, volatility) {
-  if(rising && totalDrop<5) return {level:'HIGH',pct:90,color:'var(--exit-red)',desc:'Odds reversing — loss risk increasing'};
-  if(volatility>8)          return {level:'HIGH',pct:80,color:'var(--exit-red)',desc:'High volatility detected'};
-  if(rising)                return {level:'MEDIUM',pct:60,color:'var(--wait-yellow)',desc:'Odds starting to rise'};
-  if(totalDrop<10)          return {level:'MEDIUM',pct:45,color:'var(--wait-yellow)',desc:'Monitoring — odds still moving'};
-  return {level:'LOW',pct:20,color:'var(--hedge-green)',desc:'Odds falling in your favour'};
-}
-
-// ════════════════════════════════════════════
-// MISSED BEST HEDGE POINT DETECTION
-// ════════════════════════════════════════════
-function checkMissedHedge() {
-  const updates = state.updates;
-  if(updates.length<3) return {missed:false};
-  const last = updates[updates.length-1];
-  const curBetOdds = state.betTeam==='A' ? last.oddsA : last.oddsB;
-  // If current odds are higher than best (i.e. rebounding) and were low enough
-  const totalDropFromBest = ((state.bestOddsBet - curBetOdds)/state.entryOdds)*100;
-  if(curBetOdds > state.bestOddsBet*1.05 && state.bestOddsBet < state.entryOdds*0.82) {
-    return {missed:true, best:state.bestOddsBet.toFixed(2), at:state.bestOddsUpdate};
-  }
-  return {missed:false};
-}
-
-// ════════════════════════════════════════════
-// APPLY HEDGE ACTION
-// ════════════════════════════════════════════
-function applyHedgeAction() {
+function triggerApply() {
   switchTab('hedge');
-  document.getElementById('applyHedgePanel').style.display='block';
-  document.getElementById('hedgeAppliedMsg').style.display='block';
-  state.hedgeApplied = true;
-  updateHedgeTab();
+  document.getElementById('applyPanel').style.display='block';
+  UI.renderHedge();
 }
 
-// ════════════════════════════════════════════
-// RENDER ALL
-// ════════════════════════════════════════════
-function renderAll() {
-  updateSignalBar();
-  updateProfitSummary();
-  updateAnalysisTab();
-  updateScoreTab();
-  updateHedgeTab();
-  renderHistory();
-  renderChart();
+// ✅ THE REAL FIX — confirmHedge now captures a frozen snapshot
+function confirmHedge() {
+  if (S.hedgeConfirmed) return; // Idempotent — can't confirm twice
+
+  // Capture the EXACT hedge values at this moment in time
+  const liveH = Engine.calcHedge(S);
+  const ot = S.betTeam === 'A' ? S.teamB : S.teamA;
+
+  // ✅ FREEZE everything into hedgeLock — this object never changes again
+  S.hedgeLock = {
+    H:      liveH.H,      // hedge amount — FROZEN
+    O2:     liveH.O2,     // hedge odds — FROZEN
+    pBet:   liveH.pBet,   // profit if bet team wins — FROZEN
+    pOther: liveH.pOther, // profit if other team wins — FROZEN
+    guar:   liveH.guar,   // guaranteed profit — FROZEN
+    B:      liveH.B,      // original bet — FROZEN
+    O1:     liveH.O1,     // entry odds — FROZEN
+    state:  liveH.state,  // PROFIT/LOSS/BREAKEVEN — FROZEN
+    otherTeamName: ot
+  };
+
+  S.hedgeConfirmed = true;
+
+  // Disable the confirm button immediately
+  const btn = document.getElementById('confirmBtn');
+  if (btn) { btn.disabled = true; btn.style.display = 'none'; }
+  document.getElementById('lockedMsg').style.display = 'block';
+  document.getElementById('applyBtn').style.display = 'none';
+
+  // Re-render everything in locked mode
+  UI.renderAll();
+
+  // Scroll to locked summary
+  document.getElementById('lockedSummaryCard').scrollIntoView({ behavior:'smooth', block:'center' });
 }
 
-// ════════════════════════════════════════════
-// SIGNAL BAR (top)
-// ════════════════════════════════════════════
-function updateSignalBar() {
-  const last = state.updates[state.updates.length-1];
-  const sig  = last.signal;
-  const el   = document.getElementById('signalBadgeTop');
-  el.className='signal';
-  if(sig==='HEDGE'){ el.classList.add('signal-hedge'); el.textContent='🟢 HEDGE NOW'; }
-  else if(sig==='EARLY'){ el.classList.add('signal-early'); el.textContent='🔵 EARLY HEDGE'; }
-  else if(sig==='WAIT') { el.classList.add('signal-wait');  el.textContent='🟡 WAIT'; }
-  else if(sig==='EXIT') { el.classList.add('signal-exit');  el.textContent='🔴 EXIT / LOSS RISK'; }
-  else { el.classList.add('signal-none'); el.textContent='⚪ MONITORING'; }
-
-  // Show Apply Hedge button
-  const showBtn = (sig==='HEDGE'||sig==='EARLY') && !state.hedgeApplied;
-  document.getElementById('applyHedgeBtnTop').style.display = showBtn?'inline-flex':'none';
-
-  // Missed hedge
-  const missed = checkMissedHedge();
-  const missedEl = document.getElementById('missedHedgeBadge');
-  if(missed.missed){ missedEl.style.display='inline-flex'; }
-  else { missedEl.style.display='none'; }
-}
-
-// ════════════════════════════════════════════
-// PROFIT SUMMARY CARD (always visible)
-// ════════════════════════════════════════════
-function updateProfitSummary() {
-  if(state.updates.length<2){ document.getElementById('profitSummaryCard').style.display='none'; return; }
-  document.getElementById('profitSummaryCard').style.display='block';
-
-  const h = calcHedge();
-  const {tA,tB}= {tA:state.teamA,tB:state.teamB};
-  const otherTeam = state.betTeam==='A' ? tB : tA;
-  const fmt = v => v>=0?`+₹${v.toFixed(2)}`:`-₹${Math.abs(v).toFixed(2)}`;
-
-  document.getElementById('ps-labelA').textContent=`If ${tA} wins`;
-  document.getElementById('ps-labelB').textContent=`If ${tB} wins`;
-
-  const pA = document.getElementById('ps-profitA');
-  const pB = document.getElementById('ps-profitB');
-  pA.textContent=fmt(h.profitIfBetWins);
-  pA.className='profit-box-amount '+(h.profitIfBetWins>=0?'profit-pos':'profit-neg');
-  pB.textContent=fmt(h.profitIfOtherWins);
-  pB.className='profit-box-amount '+(h.profitIfOtherWins>=0?'profit-pos':'profit-neg');
-
-  const betTeamName = state.betTeam==='A'?tA:tB;
-  document.getElementById('ps-subA').textContent=
-    state.betTeam==='A'?'Your original bet wins':'Hedge bet wins';
-  document.getElementById('ps-subB').textContent=
-    state.betTeam==='B'?'Your original bet wins':'Hedge bet wins';
-
-  document.getElementById('ps-totalInvest').textContent=`₹${(h.B+h.H).toFixed(2)}`;
-  const gEl=document.getElementById('ps-guaranteed');
-  gEl.textContent=fmt(h.guaranteed);
-  gEl.className='metric-value '+(h.guaranteed>=0?'profit-pos':'profit-neg');
-  document.getElementById('ps-hedgeAmt').textContent=`₹${h.H.toFixed(2)}`;
-  document.getElementById('ps-formula').textContent=
-    `Place ₹${h.H.toFixed(0)} on ${otherTeam} @ ${h.O2.toFixed(2)} to lock ${fmt(h.guaranteed)} profit regardless of result.`;
-}
-
-// ════════════════════════════════════════════
-// ANALYSIS TAB
-// ════════════════════════════════════════════
-function updateAnalysisTab() {
-  const last = state.updates[state.updates.length-1];
-  const curBetOdds   = state.betTeam==='A' ? last.oddsA : last.oddsB;
-  const curOtherOdds = state.betTeam==='A' ? last.oddsB : last.oddsA;
-  const totalDrop = ((state.entryOdds-curBetOdds)/state.entryOdds)*100;
-  const scoreObj  = last.score||{total:0,confirmations:0,totalDrop:0,volatility:0};
-  const rising    = last.changePct < -5;
-  const volatility= computeVolatility();
-
-  document.getElementById('curOddsBet').textContent=curBetOdds.toFixed(2);
-  const dropDir   = totalDrop>0?'▼':totalDrop<0?'▲':'—';
-  const dropColor = totalDrop>0?'var(--hedge-green)':totalDrop<0?'var(--exit-red)':'var(--muted)';
-  document.getElementById('curOddsChange').innerHTML=
-    `<span style="color:${dropColor}">${dropDir} ${Math.abs(totalDrop).toFixed(1)}% from entry</span>`;
-
-  document.getElementById('curOddsOther').textContent=curOtherOdds.toFixed(2);
-  const chDir = last.changePct>0?'▼':last.changePct<0?'▲':'—';
-  document.getElementById('curOddsOtherChange').innerHTML=
-    `<span>Last change: ${chDir} ${Math.abs(last.changePct).toFixed(1)}%</span>`;
-
-  // Risk meter
-  const risk = getRisk(totalDrop, rising, volatility);
-  document.getElementById('riskLabel').textContent=risk.level;
-  document.getElementById('riskLabel').style.color=risk.color;
-  document.getElementById('riskBar').style.width=risk.pct+'%';
-  document.getElementById('riskBar').style.background=risk.color;
-  document.getElementById('riskDesc').textContent=risk.desc;
-
-  // Bars
-  const dropClamped=Math.min(Math.max(totalDrop,0),40);
-  document.getElementById('dropPct').textContent=`${totalDrop.toFixed(1)}%`;
-  document.getElementById('dropBar').style.width=`${(dropClamped/40)*100}%`;
-  if(totalDrop>=20) document.getElementById('dropBar').className='trend-bar-fill bar-green';
-  else if(totalDrop>=10) document.getElementById('dropBar').className='trend-bar-fill bar-yellow';
-  else document.getElementById('dropBar').className='trend-bar-fill bar-red';
-
-  const confs = typeof scoreObj==='object'?scoreObj.confirmations:0;
-  const confClamped=Math.min(confs,3);
-  document.getElementById('confirmCount').textContent=`${confs} / 3`;
-  document.getElementById('confirmBar').style.width=`${(confClamped/3)*100}%`;
-
-  document.getElementById('volatilityVal').textContent=`${volatility.toFixed(1)}`;
-  document.getElementById('volatilityBar').style.width=`${Math.min(volatility*5,100)}%`;
-
-  // Decision engine
-  const check = v=>`<span style="color:var(--hedge-green)">✔ YES</span>`;
-  const no    = ()=>`<span style="color:var(--muted)">✘ NO</span>`;
-  document.getElementById('cond1').innerHTML=totalDrop>=20?check():no();
-  document.getElementById('cond-early').innerHTML=(totalDrop>=10&&confs>=1&&!rising)?check():no();
-  document.getElementById('cond2').innerHTML=confs>=2?check():no();
-  document.getElementById('cond3').innerHTML=(confs>=2&&totalDrop>0)?check():no();
-  document.getElementById('cond4').innerHTML=rising
-    ?`<span style="color:var(--exit-red)">⚠ RISING</span>`
-    :`<span style="color:var(--hedge-green)">✔ STABLE</span>`;
-  const missed=checkMissedHedge();
-  document.getElementById('condBest').innerHTML=missed.missed
-    ?`<span style="color:var(--exit-red)">⚠ WAS @ ${state.bestOddsBet.toFixed(2)}</span>`
-    :(totalDrop>=15?`<span style="color:var(--hedge-green)">✔ NOW</span>`:no());
-}
-
-// ════════════════════════════════════════════
-// SCORE TAB
-// ════════════════════════════════════════════
-function updateScoreTab() {
-  if(state.updates.length<2) return;
-  const last = state.updates[state.updates.length-1];
-  const sObj = last.score;
-  if(!sObj||typeof sObj!=='object') return;
-
-  const score=sObj.total;
-  // Ring
-  const circumference=226.2;
-  const offset=circumference-(score/100)*circumference;
-  const ring=document.getElementById('scoreRingFill');
-  ring.style.strokeDashoffset=offset;
-  ring.style.stroke=score>=70?'var(--hedge-green)':score>=40?'var(--wait-yellow)':'var(--exit-red)';
-
-  document.getElementById('scoreNum').textContent=score;
-  document.getElementById('scoreNum').style.color=score>=70?'var(--hedge-green)':score>=40?'var(--wait-yellow)':'var(--exit-red)';
-
-  document.getElementById('sf-drop').textContent=sObj.dropScore;
-  document.getElementById('sf-trend').textContent=sObj.trendScore;
-  document.getElementById('sf-stab').textContent=sObj.stabScore;
-  document.getElementById('sf-time').textContent=sObj.updateScore;
-
-  // Verdict
-  const vEl=document.getElementById('scoreVerdict');
-  const vDesc=document.getElementById('scoreVerdictDesc');
-  vEl.className='signal';
-  if(score>=70){
-    vEl.classList.add('signal-hedge'); vEl.textContent='🟢 HEDGE NOW';
-    vDesc.textContent='Score is strong. Conditions are confirmed for a profitable hedge.';
-  } else if(score>=55){
-    vEl.classList.add('signal-early'); vEl.textContent='🔵 EARLY HEDGE';
-    vDesc.textContent='Decent score. Consider early hedge to capture partial profit.';
-  } else if(score>=40){
-    vEl.classList.add('signal-wait'); vEl.textContent='🟡 PREPARE';
-    vDesc.textContent='Score building. Wait for 1–2 more confirmations before hedging.';
-  } else {
-    vEl.classList.add('signal-none'); vEl.textContent='⚪ WAIT';
-    vDesc.textContent='Score too low. Not enough signal strength yet.';
-  }
-
-  // Breakdown bars
-  document.getElementById('sbar-drop').textContent=sObj.dropScore;
-  document.getElementById('sbar-dropFill').style.width=(sObj.dropScore/40*100)+'%';
-  document.getElementById('sbar-trend').textContent=sObj.trendScore;
-  document.getElementById('sbar-trendFill').style.width=(sObj.trendScore/30*100)+'%';
-  document.getElementById('sbar-stab').textContent=sObj.stabScore;
-  document.getElementById('sbar-stabFill').style.width=(sObj.stabScore/20*100)+'%';
-  document.getElementById('sbar-time').textContent=sObj.updateScore;
-  document.getElementById('sbar-timeFill').style.width=(sObj.updateScore/10*100)+'%';
-}
-
-// ════════════════════════════════════════════
-// HEDGE TAB
-// ════════════════════════════════════════════
-function updateHedgeTab() {
-  if(state.updates.length<1) return;
-  const h = calcHedge();
-  const otherTeam = state.betTeam==='A' ? state.teamB : state.teamA;
-  const betTeamName = state.betTeam==='A' ? state.teamA : state.teamB;
-  const fmt = v=>v>=0?`+₹${v.toFixed(2)}`:`-₹${Math.abs(v).toFixed(2)}`;
-
-  document.getElementById('hc-betAmt').textContent=`₹${h.B.toLocaleString()}`;
-  document.getElementById('hc-betTeam').textContent=`On ${betTeamName}`;
-  document.getElementById('hc-entryOdds').textContent=h.O1.toFixed(2);
-  document.getElementById('hc-hedgeAmt').textContent=`₹${h.H.toFixed(2)}`;
-  document.getElementById('hc-hedgeFormula').textContent=`Place ₹${h.H.toFixed(0)} on ${otherTeam} @ ${h.O2.toFixed(2)}`;
-
-  document.getElementById('hc-winLabelA').textContent=`If ${state.teamA} wins`;
-  document.getElementById('hc-winLabelB').textContent=`If ${state.teamB} wins`;
-
-  const eA=document.getElementById('hc-profitA');
-  eA.textContent=fmt(h.profitIfBetWins);
-  eA.className='profit-amount '+(h.profitIfBetWins>=0?'profit-pos':'profit-neg');
-  const eB=document.getElementById('hc-profitB');
-  eB.textContent=fmt(h.profitIfOtherWins);
-  eB.className='profit-amount '+(h.profitIfOtherWins>=0?'profit-pos':'profit-neg');
-
-  document.getElementById('hc-totalInvest').textContent=`₹${(h.B+h.H).toFixed(2)}`;
-  const gEl=document.getElementById('hc-guaranteed');
-  gEl.textContent=fmt(h.guaranteed);
-  gEl.className='profit-amount '+(h.guaranteed>=0?'profit-pos':'profit-neg');
-
-  document.getElementById('hc-noData').style.display=state.updates.length>1?'none':'block';
-
-  // Apply Hedge panel
-  const last=state.updates[state.updates.length-1];
-  const sig=last.signal;
-  const showPanel=(sig==='HEDGE'||sig==='EARLY');
-  document.getElementById('applyHedgePanel').style.display=showPanel?'block':'none';
-  if(showPanel){
-    document.getElementById('applyHedgeDesc').textContent=
-      `Signal: ${sig==='HEDGE'?'HEDGE NOW':'EARLY HEDGE'} — Place hedge on ${otherTeam} to lock profit.`;
-    document.getElementById('ah-team').textContent=otherTeam;
-    document.getElementById('ah-amount').textContent=`₹${h.H.toFixed(2)}`;
-    document.getElementById('ah-win1Label').textContent=`If ${state.teamA} wins →`;
-    document.getElementById('ah-win2Label').textContent=`If ${state.teamB} wins →`;
-    document.getElementById('ah-win1').textContent=fmt(h.profitIfBetWins);
-    document.getElementById('ah-win2').textContent=fmt(h.profitIfOtherWins);
-  }
-}
-
-// ════════════════════════════════════════════
-// HISTORY TABLE
-// ════════════════════════════════════════════
-function renderHistory() {
-  const tbody=document.getElementById('historyBody');
-  const table=document.getElementById('historyTable');
-  const empty=document.getElementById('historyEmpty');
-  const missed=checkMissedHedge();
-
-  if(missed.missed){
-    document.getElementById('missedHedgeHistory').style.display='flex';
-    document.getElementById('missedHedgeText').textContent=
-      `Best odds were ${missed.best} at "${missed.at}". Odds have risen since — optimal window may have passed.`;
-  } else {
-    document.getElementById('missedHedgeHistory').style.display='none';
-  }
-
-  if(state.updates.length===0){table.style.display='none';empty.style.display='block';return;}
-  table.style.display='table'; empty.style.display='none';
-  tbody.innerHTML='';
-
-  state.updates.forEach((u,i)=>{
-    const tr=document.createElement('tr');
-    const chg = i===0?'—':(u.changePct>0
-      ?`<span class="change-down">▼ ${u.changePct.toFixed(1)}%</span>`
-      :u.changePct<0
-        ?`<span class="change-up">▲ ${Math.abs(u.changePct).toFixed(1)}%</span>`
-        :`<span class="change-neutral">—</span>`);
-
-    const sc = i===0?'—':(typeof u.score==='object'?u.score.total:0);
-
-    let sigHtml='—';
-    if(u.signal==='HEDGE') sigHtml=`<span class="signal signal-hedge" style="font-size:10px;padding:3px 8px">HEDGE</span>`;
-    else if(u.signal==='EARLY') sigHtml=`<span class="signal signal-early" style="font-size:10px;padding:3px 8px">EARLY</span>`;
-    else if(u.signal==='WAIT')  sigHtml=`<span class="signal signal-wait"  style="font-size:10px;padding:3px 8px">WAIT</span>`;
-    else if(u.signal==='EXIT')  sigHtml=`<span class="signal signal-exit"  style="font-size:10px;padding:3px 8px">EXIT</span>`;
-    else if(i>0) sigHtml=`<span style="color:var(--muted);font-size:11px">—</span>`;
-
-    tr.innerHTML=`
-      <td style="color:var(--muted)">${u.label}</td>
-      <td>${u.oddsA.toFixed(2)}</td>
-      <td>${u.oddsB.toFixed(2)}</td>
-      <td>${chg}</td>
-      <td style="font-family:'Syne',sans-serif;font-weight:700;color:${typeof sc==='number'&&sc>=70?'var(--hedge-green)':sc>=40?'var(--wait-yellow)':'var(--muted)'}">${sc}</td>
-      <td>${sigHtml}</td>`;
-    tbody.prepend(tr);
+function resetMatch() {
+  if (!confirm('Reset this match session?')) return;
+  S={
+    teamA:'', teamB:'', betTeam:'', betAmt:0, entryOdds:0,
+    updates:[], started:false,
+    bestOddsBet:null, bestOtherOddsAtBest:null, bestOddsLabel:'START',
+    hedgeConfirmed:false,
+    hedgeLock:null
+  };
+  document.getElementById('mainSystem').style.display='none';
+  document.getElementById('lockedSummaryCard').style.display='none';
+  if (oddsChart){ oddsChart.destroy(); oddsChart=null; }
+  ['teamA','teamB','initOddsA','initOddsB','betAmt'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('betTeam').value='';
+  // Re-enable update fields
+  ['updateLabel','newOddsA','newOddsB'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.disabled=false;
   });
+  const addBtn=document.getElementById('addUpdateBtn');
+  if(addBtn) addBtn.disabled=false;
+  document.getElementById('updateCardWrapper').classList.remove('card-disabled-overlay');
+  // Reset header badge
+  const hdrBadge=document.getElementById('headerBadge');
+  hdrBadge.className='live-badge';
+  hdrBadge.innerHTML='<div class="live-dot"></div>LIVE TRACKER';
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ════════════════════════════════════════════
-// CHART
-// ════════════════════════════════════════════
-function renderChart() {
-  const ctx = document.getElementById('oddsChart').getContext('2d');
-  const labels = state.updates.map(u=>u.label);
-  const betOdds   = state.updates.map(u=>state.betTeam==='A'?u.oddsA:u.oddsB);
-  const otherOdds = state.updates.map(u=>state.betTeam==='A'?u.oddsB:u.oddsA);
-
-  // Find hedge zone (where bet odds < entry*0.80)
-  const hedgeThreshold = state.entryOdds * 0.80;
-
-  if(oddsChart) oddsChart.destroy();
-  oddsChart = new Chart(ctx,{
-    type:'line',
-    data:{
-      labels,
-      datasets:[
-        {
-          label: state.betTeam==='A'?state.teamA:state.teamB,
-          data: betOdds,
-          borderColor:'#00e5a0',
-          backgroundColor:'rgba(0,229,160,0.06)',
-          borderWidth:2,
-          pointBackgroundColor:'#00e5a0',
-          pointRadius:4,
-          tension:0.3,
-          fill:false
-        },
-        {
-          label: state.betTeam==='A'?state.teamB:state.teamA,
-          data: otherOdds,
-          borderColor:'#ffc94a',
-          backgroundColor:'rgba(255,201,74,0.06)',
-          borderWidth:2,
-          pointBackgroundColor:'#ffc94a',
-          pointRadius:4,
-          tension:0.3,
-          fill:false
-        },
-        {
-          label:'Hedge Zone',
-          data: Array(labels.length).fill(hedgeThreshold),
-          borderColor:'rgba(0,229,160,0.25)',
-          borderDash:[6,4],
-          borderWidth:1,
-          pointRadius:0,
-          fill:false
-        }
-      ]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{
-        legend:{
-          labels:{color:'#666e82',font:{family:'Space Mono',size:10}}
-        },
-        tooltip:{
-          backgroundColor:'#181b22',
-          borderColor:'#252830',
-          borderWidth:1,
-          titleColor:'#e8eaf0',
-          bodyColor:'#666e82',
-          titleFont:{family:'Syne',weight:'bold'}
-        }
-      },
-      scales:{
-        x:{ticks:{color:'#666e82',font:{family:'Space Mono',size:10}},grid:{color:'#1a1d24'}},
-        y:{ticks:{color:'#666e82',font:{family:'Space Mono',size:10}},grid:{color:'#1a1d24'}}
-      }
-    }
-  });
-}
-
-// ════════════════════════════════════════════
-// TABS
-// ════════════════════════════════════════════
 function switchTab(name) {
   ['analysis','score','chart','hedge','history'].forEach(t=>{
     document.getElementById(`tab-${t}`).style.display=t===name?'block':'none';
   });
   document.querySelectorAll('.tab').forEach((b,i)=>{
-    const names=['analysis','score','chart','hedge','history'];
-    b.classList.toggle('active',names[i]===name);
+    b.classList.toggle('active',['analysis','score','chart','hedge','history'][i]===name);
   });
-  if(name==='hedge') updateHedgeTab();
-  if(name==='chart') renderChart();
-  if(name==='score') updateScoreTab();
+  if (name==='hedge')   UI.renderHedge();
+  if (name==='chart')   UI.renderChart();
+  if (name==='score')   UI.renderScore();
+  if (name==='history') UI.renderHistory();
 }
 </script>
 </body>
